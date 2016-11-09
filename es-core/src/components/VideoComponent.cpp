@@ -73,6 +73,14 @@ void VideoComponent::setVideo(std::string path)
 		// Store the path
 		mVideoPath = path;
 
+#if WIN32
+		// libVLC does not like forward slashes on Windows
+		size_t slash;
+		while ((slash = mVideoPath.find('/')) != std::string::npos) {
+			mVideoPath[slash] = '\\';
+		}
+#endif
+
 		// If there is a startup delay then the video will be started in the future
 		// by the render() function otherwise start it now
 		if (mStartDelay == 0)
@@ -303,7 +311,6 @@ void VideoComponent::startVideo()
 			// Get the media metadata so we can find the aspect ratio
 			libvlc_media_parse(mMedia);
 			libvlc_media_track_t** tracks;
-			libvlc_media_track_t* track;
 			track_count = libvlc_media_tracks_get(mMedia, &tracks);
 			for (unsigned track = 0; track < track_count; ++track)
 			{
