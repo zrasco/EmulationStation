@@ -98,7 +98,7 @@ void VideoComponent::setOpacity(unsigned char opacity)
 
 void VideoComponent::render(const Eigen::Affine3f& parentTrans)
 {
-	float x, y, width, height;
+	float x, y;
 
 	Eigen::Affine3f trans = parentTrans * getTransform();
 	GuiComponent::renderChildren(trans);
@@ -249,11 +249,7 @@ void VideoComponent::setupVLC()
 	// If VLC hasn't been initialised yet then do it now
 	if (!mVLC)
 	{
-		char const *vlc_argv[] =
-		{
-		};
-		int vlc_argc = sizeof(vlc_argv) / sizeof(*vlc_argv);
-		mVLC = libvlc_new(vlc_argc, vlc_argv);
+		mVLC = libvlc_new(0, NULL);
 	}
 }
 
@@ -329,25 +325,25 @@ void VideoComponent::startVideo()
 			}
 			if (aspect_video > 1.0f)
 			{
-				mVideoWidth = mSize.x();
-				mVideoHeight = mSize.x() / aspect_video;
+				mVideoWidth = (unsigned)mSize.x();
+				mVideoHeight = (unsigned)(mSize.x() / aspect_video);
 			}
 			else
 			{
-				mVideoHeight = mSize.y();
-				mVideoWidth = mSize.y() * aspect_video;
+				mVideoHeight = (unsigned)mSize.y();
+				mVideoWidth = (unsigned)(mSize.y() * aspect_video);
 			}
 
 			// Make sure the calculated size doesn't overflow the component size
 			if (mVideoWidth > mSize.x()) {
 				float ratio = (float)mVideoWidth / mSize.x();
-				mVideoWidth = mSize.x();
-				mVideoHeight = (float)mVideoHeight / ratio;
+				mVideoWidth = (unsigned)mSize.x();
+				mVideoHeight = (unsigned)((float)mVideoHeight / ratio);
 			}
 			if (mVideoHeight > mSize.y()) {
 				float ratio = (float)mVideoHeight / mSize.y();
-				mVideoHeight = mSize.y();
-				mVideoWidth = (float)mVideoWidth / ratio;
+				mVideoHeight = (unsigned)mSize.y();
+				mVideoWidth = (unsigned)((float)mVideoWidth / ratio);
 			}
 
 			setupContext();

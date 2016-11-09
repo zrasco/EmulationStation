@@ -70,9 +70,12 @@ MetaDataList MetaDataList::createFromXML(MetaDataListType type, pugi::xml_node n
 		{
 			// if it's a path, resolve relative paths
 			std::string value = md.text().get();
-			if(iter->type == MD_IMAGE_PATH)
+			if ((iter->type == MD_IMAGE_PATH) ||
+				(iter->type == MD_VIDEO_PATH) ||
+				(iter->type == MD_MARQUEE_PATH))
+			{
 				value = resolvePath(value, relativeTo, true).generic_string();
-
+			}
 			mdl.set(iter->key, value);
 		}else{
 			mdl.set(iter->key, iter->defaultValue);

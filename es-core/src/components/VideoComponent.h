@@ -9,8 +9,8 @@
 #include <memory>
 #include "resources/TextureResource.h"
 #include <vlc/vlc.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_mutex.h>
+#include <SDL.h>
+#include <SDL_mutex.h>
 
 struct VideoContext {
 	SDL_Surface*		surface;
