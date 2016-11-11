@@ -57,6 +57,12 @@ int ViewController::getSystemId(SystemData* system)
 
 void ViewController::goToSystemView(SystemData* system)
 {
+	// Tell any current view it's about to be hidden
+	if (mCurrentView)
+	{
+		mCurrentView->onHide();
+	}
+
 	mState.viewing = SYSTEM_SELECT;
 	mState.system = system;
 
@@ -224,7 +230,6 @@ std::shared_ptr<IGameListView> ViewController::getGameListView(SystemData* syste
 	std::vector<FileData*> files = system->getRootFolder()->getFilesRecursive(GAME | FOLDER);
 	for(auto it = files.begin(); it != files.end(); it++)
 	{
-#if 1
 		if(!(*it)->getVideoPath().empty())
 		{
 			video = true;
@@ -235,13 +240,6 @@ std::shared_ptr<IGameListView> ViewController::getGameListView(SystemData* syste
 			detailed = true;
 			// Don't break out in case any subsequent files have video
 		}
-#else
-		if(!(*it)->getThumbnailPath().empty())
-		{
-			detailed = true;
-			// Don't break out in case any subsequent files have video
-		}
-#endif
 	}
 		
 	if (video)

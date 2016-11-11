@@ -5,11 +5,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#define VIDEOWIDTH		640
-#define VIDEOHEIGHT		480
-#define WIDTH			640
-#define HEIGHT			480
-
 VideoGameListView::VideoGameListView(Window* window, FileData* root) :
 	BasicGameListView(window, root), 
 	mDescContainer(window), mDescription(window), 
@@ -22,8 +17,6 @@ VideoGameListView::VideoGameListView(Window* window, FileData* root) :
 	mRating(window), mReleaseDate(window), mDeveloper(window), mPublisher(window), 
 	mGenre(window), mPlayers(window), mLastPlayed(window), mPlayCount(window)
 {
-	//mHeaderImage.setPosition(mSize.x() * 0.25f, 0);
-
 	const float padding = 0.01f;
 
 	mList.setPosition(mSize.x() * (0.50f + padding), mList.getPosition().y());
@@ -276,7 +269,10 @@ void VideoGameListView::launch(FileData* game)
 {
 	Eigen::Vector3f target(Renderer::getScreenWidth() / 2.0f, Renderer::getScreenHeight() / 2.0f, 0);
 	if(mMarquee.hasImage())
-		target << mMarquee.getCenter().x(), mMarquee.getCenter().y(), 0;
+		target << mVideo.getCenter().x(), mVideo.getCenter().y(), 0;
+
+	// Stop the video from playing
+	mVideo.stopVideo();
 
 	ViewController::get()->launch(game, target);
 }

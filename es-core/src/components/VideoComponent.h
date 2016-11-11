@@ -49,6 +49,10 @@ public:
 	virtual void applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties) override;
 
 	virtual std::vector<HelpPrompt> getHelpPrompts() override;
+
+	// Returns the center point of the video (takes origin into account).
+	Eigen::Vector2f getCenter() const;
+
 private:
 	void setupContext();
 	void freeContext();
@@ -58,10 +62,6 @@ private:
 
 	// Handle looping the video. Must be called periodically
 	void handleLooping();
-
-	// Returns the center point of the video (takes origin into account).
-	Eigen::Vector2f getCenter() const;
-
 
 private:
 	static libvlc_instance_t*		mVLC;

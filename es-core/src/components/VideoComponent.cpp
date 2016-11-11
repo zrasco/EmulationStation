@@ -373,7 +373,6 @@ void VideoComponent::stopVideo()
 	// Release the media player so it stops calling back to us
 	if (mMediaPlayer)
 	{
-		mVideoPath.clear();
 		libvlc_media_player_stop(mMediaPlayer);
 		libvlc_media_player_release(mMediaPlayer);
 		libvlc_media_release(mMedia);
