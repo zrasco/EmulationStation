@@ -81,10 +81,10 @@ bool ComponentList::input(InputConfig* config, Input input)
 	}else if(config->isMappedTo("down", input))
 	{
 		return listInput(input.value != 0 ? 1 : 0);
-	}else if(config->isMappedTo("leftbottom", input))
+	}else if(config->isMappedTo("leftshoulder", input))
 	{
 		return listInput(input.value != 0 ? -7 : 0);
-	}else if(config->isMappedTo("rightbottom", input)){
+	}else if(config->isMappedTo("rightshoulder", input)){
 		return listInput(input.value != 0 ? 7 : 0);
 	}
 
