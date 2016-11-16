@@ -2,7 +2,9 @@
 #include "Renderer.h"
 #include "ThemeData.h"
 #include "Util.h"
+#ifdef WIN32
 #include <codecvt>
+#endif
 
 libvlc_instance_t*		VideoComponent::mVLC = NULL;
 
@@ -276,7 +278,8 @@ void VideoComponent::setupVLC()
 	// If VLC hasn't been initialised yet then do it now
 	if (!mVLC)
 	{
-		mVLC = libvlc_new(0, NULL);
+		const char* args[] = { "--quiet" };
+		mVLC = libvlc_new(sizeof(args) / sizeof(args[0]), args);
 	}
 }
 
@@ -322,12 +325,16 @@ void VideoComponent::startVideo()
 		int			width = 0;
 		int			height = 0;
 		
+#ifdef WIN32
+		std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> wton;
+		std::string path = wton.to_bytes(mVideoPath.c_str());
+#else
+		std::string path(mVideoPath.c_str());
+#endif
 		// Make sure we have a video path
-		if (mVLC && (mVideoPath.size() > 0)) 
+		if (mVLC && (path.size() > 0))
 		{
 			// Open the media
-			std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> wton;
-			std::string path = wton.to_bytes(mVideoPath.c_str());
 			mMedia = libvlc_media_new_path(mVLC, path.c_str());
 			if (mMedia)
 			{
