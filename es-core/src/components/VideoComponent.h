@@ -5,12 +5,14 @@
 #include GLHEADER
 
 #include "GuiComponent.h"
+#include "ImageComponent.h"
 #include <string>
 #include <memory>
 #include "resources/TextureResource.h"
 #include <vlc/vlc.h>
 #include <SDL.h>
 #include <SDL_mutex.h>
+#include <boost/filesystem.hpp>
 
 struct VideoContext {
 	SDL_Surface*		surface;
@@ -28,6 +30,8 @@ public:
 
 	// Loads the video at the given filepath
 	void setVideo(std::string path);
+	// Loads a static image that is displayed if the video cannot be played
+	void setImage(std::string path);
 	
 	// Start the video
 	void startVideo();
@@ -72,11 +76,13 @@ private:
 	unsigned						mVideoHeight;
 	Eigen::Vector2f 				mOrigin;
 	unsigned						mStartDelay;
-	std::string						mVideoPath;
+	boost::filesystem::path			mVideoPath;
 	bool							mStartDelayed;
 	unsigned						mStartTime;
 	bool							mIsPlaying;
 	std::shared_ptr<TextureResource> mTexture;
+
+	ImageComponent					mStaticImage;
 };
 
 #endif

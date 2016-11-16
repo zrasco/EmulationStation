@@ -198,6 +198,7 @@ void VideoGameListView::updateInfoPanel()
 	if(file == NULL)
 	{
 		mVideo.setVideo("");
+		mVideo.setImage("");
 		//mMarquee.setImage("");
 		//mDescription.setText("");
 		fadingOut = true;
@@ -205,8 +206,10 @@ void VideoGameListView::updateInfoPanel()
 	}else{
 		std::string				video_path;
 		std::string				marquee_path;
-		video_path = file->getVideoPath();
-		marquee_path = file->getMarqueePath();
+		std::string				thumbnail_path;
+		video_path 			= file->getVideoPath();
+		marquee_path 		= file->getMarqueePath();
+		thumbnail_path 		= file->getThumbnailPath();
 
 		if	(!video_path.empty() && (video_path[0] == '~'))
 		{
@@ -218,7 +221,13 @@ void VideoGameListView::updateInfoPanel()
 			marquee_path.erase(0, 1);
 			marquee_path.insert(0, getHomePath());
 		}
+		if (!thumbnail_path.empty() && (thumbnail_path[0] == '~'))
+		{
+			thumbnail_path.erase(0, 1);
+			thumbnail_path.insert(0, getHomePath());
+		}
 		mVideo.setVideo(video_path);
+		mVideo.setImage(thumbnail_path);
 		mMarquee.setImage(marquee_path);
 
 		mDescription.setText(file->metadata.get("desc"));

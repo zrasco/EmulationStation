@@ -1,6 +1,8 @@
 #include "components/VideoComponent.h"
 #include "Renderer.h"
 #include "ThemeData.h"
+#include "Util.h"
+#include <codecvt>
 
 libvlc_instance_t*		VideoComponent::mVLC = NULL;
 
@@ -25,8 +27,9 @@ static void display(void *data, void *id) {
     //Data to be displayed
 }
 
-VideoComponent::VideoComponent(Window* window) : GuiComponent(window), mMediaPlayer(nullptr),
-		mVideoHeight(0), mVideoWidth(0), mStartDelay(0), mStartDelayed(false), mIsPlaying(false)
+VideoComponent::VideoComponent(Window* window) : GuiComponent(window), mStaticImage(window),
+		mMediaPlayer(nullptr), mVideoHeight(0), mVideoWidth(0),
+		mStartDelay(0), mStartDelayed(false), mIsPlaying(false)
 {
 	memset(&mContext, 0, sizeof(mContext));
 
@@ -46,6 +49,9 @@ VideoComponent::~VideoComponent()
 void VideoComponent::setOrigin(float originX, float originY)
 {
 	mOrigin << originX, originY;
+
+	// Update the embeded static image
+	mStaticImage.setOrigin(originX, originY);
 }
 
 Eigen::Vector2f VideoComponent::getCenter() const
@@ -56,6 +62,8 @@ Eigen::Vector2f VideoComponent::getCenter() const
 
 void VideoComponent::onSizeChanged()
 {
+	// Update the embeded static image
+	mStaticImage.onSizeChanged();
 }
 
 void VideoComponent::setVideo(std::string path)
@@ -71,15 +79,8 @@ void VideoComponent::setVideo(std::string path)
 	if (!path.empty() && ResourceManager::getInstance()->fileExists(path))
 	{
 		// Store the path
-		mVideoPath = path;
-
-#if WIN32
-		// libVLC does not like forward slashes on Windows
-		size_t slash;
-		while ((slash = mVideoPath.find('/')) != std::string::npos) {
-			mVideoPath[slash] = '\\';
-		}
-#endif
+		mVideoPath = getCanonicalPath(path);
+		mVideoPath.make_preferred().native();
 
 		// If there is a startup delay then the video will be started in the future
 		// by the render() function otherwise start it now
@@ -99,9 +100,18 @@ void VideoComponent::setVideo(std::string path)
 	}
 }
 
+void VideoComponent::setImage(std::string path)
+{
+	mStaticImage.setImage(path);
+	// Make the image stretch to fill the video region
+	mStaticImage.setSize(getSize());
+}
+
 void VideoComponent::setOpacity(unsigned char opacity)
 {
 	mOpacity = opacity;
+	// Update the embeded static image
+	mStaticImage.setOpacity(opacity);
 }
 
 void VideoComponent::render(const Eigen::Affine3f& parentTrans)
@@ -183,6 +193,11 @@ void VideoComponent::render(const Eigen::Affine3f& parentTrans)
 		glDisableClientState(GL_VERTEX_ARRAY);
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	}
+	else
+	{
+		// Display the static image instead
+		mStaticImage.render(parentTrans);
+	}
 
 }
 
@@ -222,6 +237,10 @@ void VideoComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const s
 	{
 		setStartDelay(elem->get<float>("delay"));
 	}
+	// Update the embeded static image
+	mStaticImage.setPosition(getPosition());
+	mStaticImage.setMaxSize(getSize());
+	mStaticImage.setSize(getSize());
 }
 
 std::vector<HelpPrompt> VideoComponent::getHelpPrompts()
@@ -304,65 +323,70 @@ void VideoComponent::startVideo()
 		int			height = 0;
 		
 		// Make sure we have a video path
-		if (mVideoPath.size() > 0) {
+		if (mVLC && (mVideoPath.size() > 0)) 
+		{
 			// Open the media
-			mMedia = libvlc_media_new_path(mVLC, mVideoPath.c_str());
-
-			// Get the media metadata so we can find the aspect ratio
-			libvlc_media_parse(mMedia);
-			libvlc_media_track_t** tracks;
-			track_count = libvlc_media_tracks_get(mMedia, &tracks);
-			for (unsigned track = 0; track < track_count; ++track)
+			std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> wton;
+			std::string path = wton.to_bytes(mVideoPath.c_str());
+			mMedia = libvlc_media_new_path(mVLC, path.c_str());
+			if (mMedia)
 			{
-				if (tracks[track]->i_type == libvlc_track_video)
+				// Get the media metadata so we can find the aspect ratio
+				libvlc_media_parse(mMedia);
+				libvlc_media_track_t** tracks;
+				track_count = libvlc_media_tracks_get(mMedia, &tracks);
+				for (unsigned track = 0; track < track_count; ++track)
 				{
-					width = tracks[track]->video->i_width;
-					height = tracks[track]->video->i_height;
-					break;
+					if (tracks[track]->i_type == libvlc_track_video)
+					{
+						width = tracks[track]->video->i_width;
+						height = tracks[track]->video->i_height;
+						break;
+					}
 				}
-			}
-			libvlc_media_tracks_release(tracks, track_count);
+				libvlc_media_tracks_release(tracks, track_count);
 
-			// Work out the width and height of the video to fit in the window with
-			// the correct aspect ratio
-			float aspect_video = 1.0f;
-			if ((width > 0) && (height > 0))
-			{
-				aspect_video = (float)width / (float)height;
-			}
-			if (aspect_video > 1.0f)
-			{
-				mVideoWidth = (unsigned)mSize.x();
-				mVideoHeight = (unsigned)(mSize.x() / aspect_video);
-			}
-			else
-			{
-				mVideoHeight = (unsigned)mSize.y();
-				mVideoWidth = (unsigned)(mSize.y() * aspect_video);
-			}
+				// Work out the width and height of the video to fit in the window with
+				// the correct aspect ratio
+				float aspect_video = 1.0f;
+				if ((width > 0) && (height > 0))
+				{
+					aspect_video = (float)width / (float)height;
+				}
+				if (aspect_video > 1.0f)
+				{
+					mVideoWidth = (unsigned)mSize.x();
+					mVideoHeight = (unsigned)(mSize.x() / aspect_video);
+				}
+				else
+				{
+					mVideoHeight = (unsigned)mSize.y();
+					mVideoWidth = (unsigned)(mSize.y() * aspect_video);
+				}
 
-			// Make sure the calculated size doesn't overflow the component size
-			if (mVideoWidth > mSize.x()) {
-				float ratio = (float)mVideoWidth / mSize.x();
-				mVideoWidth = (unsigned)mSize.x();
-				mVideoHeight = (unsigned)((float)mVideoHeight / ratio);
-			}
-			if (mVideoHeight > mSize.y()) {
-				float ratio = (float)mVideoHeight / mSize.y();
-				mVideoHeight = (unsigned)mSize.y();
-				mVideoWidth = (unsigned)((float)mVideoWidth / ratio);
-			}
+				// Make sure the calculated size doesn't overflow the component size
+				if (mVideoWidth > mSize.x()) {
+					float ratio = (float)mVideoWidth / mSize.x();
+					mVideoWidth = (unsigned)mSize.x();
+					mVideoHeight = (unsigned)((float)mVideoHeight / ratio);
+				}
+				if (mVideoHeight > mSize.y()) {
+					float ratio = (float)mVideoHeight / mSize.y();
+					mVideoHeight = (unsigned)mSize.y();
+					mVideoWidth = (unsigned)((float)mVideoWidth / ratio);
+				}
 
-			setupContext();
+				setupContext();
 
-			// Setup the media player
-			mMediaPlayer = libvlc_media_player_new_from_media(mMedia);
-			libvlc_media_player_play(mMediaPlayer);
-			libvlc_video_set_callbacks(mMediaPlayer, lock, unlock, display, (void*)&mContext);
-			libvlc_video_set_format(mMediaPlayer, "RGBA", (int)mVideoWidth, (int)mVideoHeight, (int)mVideoWidth*4);
-			
-			// Update the playing state
-			mIsPlaying = true;
+				// Setup the media player
+				mMediaPlayer = libvlc_media_player_new_from_media(mMedia);
+				libvlc_media_player_play(mMediaPlayer);
+				libvlc_video_set_callbacks(mMediaPlayer, lock, unlock, display, (void*)&mContext);
+				libvlc_video_set_format(mMediaPlayer, "RGBA", (int)mVideoWidth, (int)mVideoHeight, (int)mVideoWidth * 4);
+
+				// Update the playing state
+				mIsPlaying = true;
+			}
 		}
 	}
 }
@@ -370,6 +394,7 @@ void VideoComponent::startVideo()
 void VideoComponent::stopVideo()
 {
 	mIsPlaying = false;
+	mStartDelayed = false;
 	// Release the media player so it stops calling back to us
 	if (mMediaPlayer)
 	{
