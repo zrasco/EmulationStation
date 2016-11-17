@@ -181,6 +181,7 @@ void VideoComponent::render(const Eigen::Affine3f& parentTrans)
 		vertices[5].tex[0] = 1.0f + tex_offs_x;		vertices[5].tex[1] = 1.0f + tex_offs_y;
 
 		glEnable(GL_TEXTURE_2D);
+
 		mTexture->initFromPixels((unsigned char*)mContext.surface->pixels, mContext.surface->w, mContext.surface->h);
 		mTexture->bind();
 
@@ -194,6 +195,8 @@ void VideoComponent::render(const Eigen::Affine3f& parentTrans)
 
 		glDisableClientState(GL_VERTEX_ARRAY);
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+		glDisable(GL_TEXTURE_2D);
 	}
 	else
 	{
