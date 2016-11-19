@@ -6,6 +6,8 @@
 #include <codecvt>
 #endif
 
+#define FADE_TIME_MS	200
+
 libvlc_instance_t*		VideoComponent::mVLC = NULL;
 
 // VLC prepares to render a video frame.
@@ -30,8 +32,9 @@ static void display(void *data, void *id) {
 }
 
 VideoComponent::VideoComponent(Window* window) : GuiComponent(window), mStaticImage(window),
-		mMediaPlayer(nullptr), mVideoHeight(0), mVideoWidth(0),
-		mStartDelay(0), mStartDelayed(false), mIsPlaying(false)
+	mMediaPlayer(nullptr), mVideoHeight(0), mVideoWidth(0),
+	mStartDelay(0), mStartDelayed(false), mIsPlaying(false),
+	mShowSnapshotDelay(false), mShowSnapshotNoVideo(false)
 {
 	memset(&mContext, 0, sizeof(mContext));
 
@@ -70,6 +73,13 @@ void VideoComponent::onSizeChanged()
 
 void VideoComponent::setVideo(std::string path)
 {
+	boost::filesystem::path fullPath = getCanonicalPath(path);
+	fullPath.make_preferred().native();
+
+	// Check that it's changed
+	if (fullPath == mVideoPath)
+		return;
+
 	// See if the video was playing because we'll restart it if it was
 	bool playing = mIsPlaying;
 	
@@ -78,11 +88,10 @@ void VideoComponent::setVideo(std::string path)
 	mVideoPath.clear();
 
 	// If the file exists then start the new video
-	if (!path.empty() && ResourceManager::getInstance()->fileExists(path))
+	if (!fullPath.empty() && ResourceManager::getInstance()->fileExists(fullPath.generic_string()))
 	{
 		// Store the path
-		mVideoPath = getCanonicalPath(path);
-		mVideoPath.make_preferred().native();
+		mVideoPath = fullPath;
 
 		// If there is a startup delay then the video will be started in the future
 		// by the render() function otherwise start it now
@@ -97,6 +106,7 @@ void VideoComponent::setVideo(std::string path)
 		else
 		{
 			mStartDelayed = true;
+			mFadeIn = 0.0f;
 			mStartTime = SDL_GetTicks() + mStartDelay;
 		}
 	}
@@ -104,9 +114,20 @@ void VideoComponent::setVideo(std::string path)
 
 void VideoComponent::setImage(std::string path)
 {
+	// Check that the image has changed
+	if (path == mStaticImagePath)
+		return;
+	
 	mStaticImage.setImage(path);
 	// Make the image stretch to fill the video region
 	mStaticImage.setSize(getSize());
+	mFadeIn = 0.0f;
+	mStaticImagePath = path;
+}
+
+void VideoComponent::setDefaultVideo()
+{
+	setVideo(mDefaultVideoPath);
 }
 
 void VideoComponent::setOpacity(unsigned char opacity)
@@ -182,6 +203,8 @@ void VideoComponent::render(const Eigen::Affine3f& parentTrans)
 
 		glEnable(GL_TEXTURE_2D);
 
+		glColor3f(mFadeIn, mFadeIn, mFadeIn);
+
 		mTexture->initFromPixels((unsigned char*)mContext.surface->pixels, mContext.surface->w, mContext.surface->h);
 		mTexture->bind();
 
@@ -196,12 +219,18 @@ void VideoComponent::render(const Eigen::Affine3f& parentTrans)
 		glDisableClientState(GL_VERTEX_ARRAY);
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
+		glColor3f(1.0f, 1.0f, 1.0f);
 		glDisable(GL_TEXTURE_2D);
 	}
 	else
 	{
-		// Display the static image instead
-		mStaticImage.render(parentTrans);
+		if ((mShowSnapshotNoVideo && mVideoPath.empty()) || (mStartDelayed && mShowSnapshotDelay))
+		{
+			// Display the static image instead
+			mStaticImage.setOpacity((unsigned char)(mFadeIn * 255.0f));
+			glColor3f(mFadeIn, mFadeIn, mFadeIn);
+			mStaticImage.render(parentTrans);
+		}
 	}
 
 }
@@ -233,14 +262,22 @@ void VideoComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const s
 	if((properties & ORIGIN || (properties & POSITION && properties & ThemeFlags::SIZE)) && elem->has("origin"))
 		setOrigin(elem->get<Eigen::Vector2f>("origin"));
 
-	if(properties & PATH && elem->has("path"))
+	if(elem->has("default"))
 	{
-		setVideo(elem->get<std::string>("path"));
+		setDefaultVideoPath(elem->get<std::string>("default"));
 	}
 
 	if(properties & ThemeFlags::DELAY && elem->has("delay"))
 	{
 		setStartDelay(elem->get<float>("delay"));
+	}
+	if (elem->has("showSnapshotNoVideo"))
+	{
+		setShowSnapshotNoVideo(elem->get<bool>("showSnapshotNoVideo"));
+	}
+	if (elem->has("showSnapshotDelay"))
+	{
+		setShowSnapshotDelay(elem->get<bool>("showSnapshotDelay"));
 	}
 	// Update the embeded static image
 	mStaticImage.setPosition(getPosition());
@@ -289,6 +326,21 @@ void VideoComponent::setupVLC()
 void VideoComponent::setStartDelay(float seconds)
 {
 	mStartDelay = (unsigned)(seconds * 1000.0f);
+}
+
+void VideoComponent::setShowSnapshotNoVideo(bool show)
+{
+	mShowSnapshotNoVideo = show;
+}
+
+void VideoComponent::setShowSnapshotDelay(bool show)
+{
+	mShowSnapshotDelay = show;
+}
+
+void VideoComponent::setDefaultVideoPath(std::string path)
+{
+	mDefaultVideoPath = path;
 }
 
 void VideoComponent::handleStartDelay()
@@ -396,6 +448,7 @@ void VideoComponent::startVideo()
 
 				// Update the playing state
 				mIsPlaying = true;
+				mFadeIn = 0.0f;
 			}
 		}
 	}
@@ -416,3 +469,29 @@ void VideoComponent::stopVideo()
 	}
 }
 
+void VideoComponent::update(int deltaTime)
+{
+	// If the video start is delayed and there is less than the fade time then set the image fade
+	// accordingly
+	if (mStartDelayed)
+	{
+		ULONG ticks = SDL_GetTicks();
+		if (mStartTime > ticks) 
+		{
+			ULONG diff = mStartTime - ticks;
+			if (diff < FADE_TIME_MS) 
+			{
+				mFadeIn = (float)diff / (float)FADE_TIME_MS;
+				return;
+			}
+		}
+	}
+	// If the fade in is less than 1 then increment it
+	if (mFadeIn < 1.0f)
+	{
+		mFadeIn += deltaTime / (float)FADE_TIME_MS;
+		if (mFadeIn > 1.0f)
+			mFadeIn = 1.0f;
+	}
+	GuiComponent::update(deltaTime);
+}

@@ -21,6 +21,7 @@ protected:
 	
 	virtual void onShow() override;
 	virtual void onHide() override;
+	virtual void update(int deltaTime) override;
 
 private:
 	void updateInfoPanel();

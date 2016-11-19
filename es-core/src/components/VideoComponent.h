@@ -32,6 +32,9 @@ public:
 	void setVideo(std::string path);
 	// Loads a static image that is displayed if the video cannot be played
 	void setImage(std::string path);
+
+	// Configures the component to show the default video
+	void setDefaultVideo();
 	
 	// Start the video
 	void startVideo();
@@ -42,8 +45,11 @@ public:
 	void setOrigin(float originX, float originY);
 	inline void setOrigin(Eigen::Vector2f origin) { setOrigin(origin.x(), origin.y()); }
 
-	// Sets the start delay between setVideo and the video being played
+	// Theme configuration
 	void setStartDelay(float seconds);
+	void setShowSnapshotNoVideo(bool show);
+	void setShowSnapshotDelay(bool show);
+	void setDefaultVideoPath(std::string path);
 
 	void onSizeChanged() override;
 	void setOpacity(unsigned char opacity) override;
@@ -56,6 +62,8 @@ public:
 
 	// Returns the center point of the video (takes origin into account).
 	Eigen::Vector2f getCenter() const;
+
+	virtual void update(int deltaTime);
 
 private:
 	void setupContext();
@@ -76,11 +84,16 @@ private:
 	unsigned						mVideoHeight;
 	Eigen::Vector2f 				mOrigin;
 	unsigned						mStartDelay;
+	bool							mShowSnapshotNoVideo;
+	bool							mShowSnapshotDelay;
+	std::string						mDefaultVideoPath;
 	boost::filesystem::path			mVideoPath;
 	bool							mStartDelayed;
 	unsigned						mStartTime;
 	bool							mIsPlaying;
 	std::shared_ptr<TextureResource> mTexture;
+	float							mFadeIn;
+	std::string						mStaticImagePath;
 
 	ImageComponent					mStaticImage;
 };
