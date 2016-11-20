@@ -5,11 +5,8 @@
 #ifdef WIN32
 #include <codecvt>
 #endif
-<<<<<<< HEAD
-=======
 
 #define FADE_TIME_MS	200
->>>>>>> c80c9efe2856694940a871a8bf7bf6abd77237a9
 
 libvlc_instance_t*		VideoComponent::mVLC = NULL;
 
@@ -81,7 +78,7 @@ bool VideoComponent::setVideo(std::string path)
 
 	// Check that it's changed
 	if (fullPath == mVideoPath)
-		return;
+		return !path.empty();
 
 	// See if the video was playing because we'll restart it if it was
 	bool playing = mIsPlaying;
@@ -189,6 +186,7 @@ void VideoComponent::render(const Eigen::Affine3f& parentTrans)
 		{
 			Eigen::Vector2f pos;
 			Eigen::Vector2f tex;
+			Eigen::Vector3f colour;
 		} vertices[6];
 
 
@@ -208,16 +206,19 @@ void VideoComponent::render(const Eigen::Affine3f& parentTrans)
 		vertices[4].tex[0] = -tex_offs_x;			vertices[4].tex[1] = 1.0f + tex_offs_y;
 		vertices[5].tex[0] = 1.0f + tex_offs_x;		vertices[5].tex[1] = 1.0f + tex_offs_y;
 
-		glEnable(GL_TEXTURE_2D);
+		for (int i = 0; i < (3 * 6); ++i)
+			vertices[i / 3].colour[i % 3] = mFadeIn;
 
-		glColor3f(mFadeIn, mFadeIn, mFadeIn);
+		glEnable(GL_TEXTURE_2D);
 
 		mTexture->initFromPixels((unsigned char*)mContext.surface->pixels, mContext.surface->w, mContext.surface->h);
 		mTexture->bind();
 
+		glEnableClientState(GL_COLOR_ARRAY);
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
+		glColorPointer(3, GL_FLOAT, sizeof(Vertex), &vertices[0].colour);
 		glVertexPointer(2, GL_FLOAT, sizeof(Vertex), &vertices[0].pos);
 		glTexCoordPointer(2, GL_FLOAT, sizeof(Vertex), &vertices[0].tex);
 
@@ -225,8 +226,8 @@ void VideoComponent::render(const Eigen::Affine3f& parentTrans)
 
 		glDisableClientState(GL_VERTEX_ARRAY);
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		glDisableClientState(GL_COLOR_ARRAY);
 
-		glColor3f(1.0f, 1.0f, 1.0f);
 		glDisable(GL_TEXTURE_2D);
 	}
 	else
@@ -235,7 +236,6 @@ void VideoComponent::render(const Eigen::Affine3f& parentTrans)
 		{
 			// Display the static image instead
 			mStaticImage.setOpacity((unsigned char)(mFadeIn * 255.0f));
-			glColor3f(mFadeIn, mFadeIn, mFadeIn);
 			mStaticImage.render(parentTrans);
 		}
 	}
@@ -482,10 +482,10 @@ void VideoComponent::update(int deltaTime)
 	// accordingly
 	if (mStartDelayed)
 	{
-		ULONG ticks = SDL_GetTicks();
+		Uint32 ticks = SDL_GetTicks();
 		if (mStartTime > ticks) 
 		{
-			ULONG diff = mStartTime - ticks;
+			Uint32 diff = mStartTime - ticks;
 			if (diff < FADE_TIME_MS) 
 			{
 				mFadeIn = (float)diff / (float)FADE_TIME_MS;
