@@ -350,5 +350,6 @@ void VideoGameListView::onHide()
 
 void VideoGameListView::update(int deltaTime)
 {
+	BasicGameListView::update(deltaTime);
 	mVideo.update(deltaTime);
 }
