@@ -29,7 +29,7 @@ public:
 	virtual ~VideoComponent();
 
 	// Loads the video at the given filepath
-	void setVideo(std::string path);
+	bool setVideo(std::string path);
 	// Loads a static image that is displayed if the video cannot be played
 	void setImage(std::string path);
 	
