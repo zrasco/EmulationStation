@@ -21,6 +21,7 @@ protected:
 	
 	virtual void onShow() override;
 	virtual void onHide() override;
+	virtual void update(int deltaTime) override;
 
 private:
 	void updateInfoPanel();
@@ -30,6 +31,7 @@ private:
 
 	ImageComponent mMarquee;
 	VideoComponent mVideo;
+	ImageComponent mImage;
 
 	TextComponent mLblRating, mLblReleaseDate, mLblDeveloper, mLblPublisher, mLblGenre, mLblPlayers, mLblLastPlayed, mLblPlayCount;
 

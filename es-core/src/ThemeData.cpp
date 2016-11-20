@@ -87,8 +87,10 @@ std::map< std::string, ElementMapType > ThemeData::sElementMap = boost::assign::
 		("pos", NORMALIZED_PAIR)
 		("size", NORMALIZED_PAIR)
 		("origin", NORMALIZED_PAIR)
-		("path", PATH)
+		("default", PATH)
 		("delay", FLOAT)
+		("showSnapshotNoVideo", BOOLEAN)
+		("showSnapshotDelay", BOOLEAN)
 		("tile", BOOLEAN)));
 
 namespace fs = boost::filesystem;

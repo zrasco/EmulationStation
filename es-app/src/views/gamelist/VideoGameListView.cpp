@@ -9,6 +9,7 @@ VideoGameListView::VideoGameListView(Window* window, FileData* root) :
 	BasicGameListView(window, root), 
 	mDescContainer(window), mDescription(window), 
 	mMarquee(window),
+	mImage(window),
 	mVideo(window),
 
 	mLblRating(window), mLblReleaseDate(window), mLblDeveloper(window), mLblPublisher(window), 
@@ -30,11 +31,29 @@ VideoGameListView::VideoGameListView(Window* window, FileData* root) :
 	mMarquee.setMaxSize(mSize.x() * (0.5f - 2*padding), mSize.y() * 0.18f);
 	addChild(&mMarquee);
 
+	// Image
+	mImage.setOrigin(0.5f, 0.5f);
+	// Default to off the screen
+	mImage.setPosition(2.0f, 2.0f);
+	mImage.setMaxSize(1.0f, 1.0f);
+	addChild(&mImage);
+
 	// video
 	mVideo.setOrigin(0.5f, 0.5f);
 	mVideo.setPosition(mSize.x() * 0.25f, mSize.y() * 0.4f);
 	mVideo.setSize(mSize.x() * (0.5f - 2*padding), mSize.y() * 0.4f);
 	addChild(&mVideo);
+
+	// We want the video to be in front of the background but behind any 'extra' images
+	for (std::vector<GuiComponent*>::iterator it = mChildren.begin(); it != mChildren.end(); ++it)
+	{
+		if (*it == &mThemeExtras)
+		{
+			mChildren.insert(it, &mVideo);
+			mChildren.pop_back();
+			break;
+		}
+	}
 
 	// metadata labels + values
 	mLblRating.setText("Rating: ");
@@ -87,6 +106,7 @@ void VideoGameListView::onThemeChanged(const std::shared_ptr<ThemeData>& theme)
 
 	using namespace ThemeFlags;
 	mMarquee.applyTheme(theme, getName(), "md_marquee", POSITION | ThemeFlags::SIZE);
+	mImage.applyTheme(theme, getName(), "md_image", POSITION | ThemeFlags::SIZE);
 	mVideo.applyTheme(theme, getName(), "md_video", POSITION | ThemeFlags::SIZE | ThemeFlags::DELAY);
 
 	initMDLabels();
@@ -226,9 +246,17 @@ void VideoGameListView::updateInfoPanel()
 			thumbnail_path.erase(0, 1);
 			thumbnail_path.insert(0, getHomePath());
 		}
-		mVideo.setVideo(video_path);
+		if (!video_path.empty())
+		{
+			mVideo.setVideo(video_path);
+		}
+		else
+		{
+			mVideo.setDefaultVideo();
+		}
 		mVideo.setImage(thumbnail_path);
 		mMarquee.setImage(marquee_path);
+		mImage.setImage(thumbnail_path);
 
 		mDescription.setText(file->metadata.get("desc"));
 		mDescContainer.reset();
@@ -252,6 +280,7 @@ void VideoGameListView::updateInfoPanel()
 	comps.push_back(&mMarquee);
 	comps.push_back(&mVideo);
 	comps.push_back(&mDescription);
+	comps.push_back(&mImage);
 	std::vector<TextComponent*> labels = getMDLabels();
 	comps.insert(comps.end(), labels.begin(), labels.end());
 
@@ -324,3 +353,7 @@ void VideoGameListView::onHide()
 	mVideo.stopVideo();
 }
 
+void VideoGameListView::update(int deltaTime)
+{
+	mVideo.update(deltaTime);
+}
