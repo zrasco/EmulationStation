@@ -391,10 +391,9 @@ void VideoComponent::handleLooping()
 void VideoComponent::startVideo()
 {
 	if (!mIsPlaying) {
-		unsigned 	track_count;
-		int			width = 0;
-		int			height = 0;
-		
+		mVideoWidth = 0;
+		mVideoHeight = 0;
+
 #ifdef WIN32
 		std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> wton;
 		std::string path = wton.to_bytes(mVideoPath.c_str());
@@ -408,6 +407,7 @@ void VideoComponent::startVideo()
 			mMedia = libvlc_media_new_path(mVLC, path.c_str());
 			if (mMedia)
 			{
+				unsigned 	track_count;
 				// Get the media metadata so we can find the aspect ratio
 				libvlc_media_parse(mMedia);
 				libvlc_media_track_t** tracks;
@@ -416,54 +416,28 @@ void VideoComponent::startVideo()
 				{
 					if (tracks[track]->i_type == libvlc_track_video)
 					{
-						width = tracks[track]->video->i_width;
-						height = tracks[track]->video->i_height;
+						mVideoWidth = tracks[track]->video->i_width;
+						mVideoHeight = tracks[track]->video->i_height;
 						break;
 					}
 				}
 				libvlc_media_tracks_release(tracks, track_count);
 
-				// Work out the width and height of the video to fit in the window with
-				// the correct aspect ratio
-				float aspect_video = 1.0f;
-				if ((width > 0) && (height > 0))
+				// Make sure we found a valid video track
+				if ((mVideoWidth > 0) && (mVideoHeight > 0))
 				{
-					aspect_video = (float)width / (float)height;
-				}
-				if (aspect_video > 1.0f)
-				{
-					mVideoWidth = (unsigned)mSize.x();
-					mVideoHeight = (unsigned)(mSize.x() / aspect_video);
-				}
-				else
-				{
-					mVideoHeight = (unsigned)mSize.y();
-					mVideoWidth = (unsigned)(mSize.y() * aspect_video);
-				}
+					setupContext();
 
-				// Make sure the calculated size doesn't overflow the component size
-				if (mVideoWidth > mSize.x()) {
-					float ratio = (float)mVideoWidth / mSize.x();
-					mVideoWidth = (unsigned)mSize.x();
-					mVideoHeight = (unsigned)((float)mVideoHeight / ratio);
+					// Setup the media player
+					mMediaPlayer = libvlc_media_player_new_from_media(mMedia);
+					libvlc_media_player_play(mMediaPlayer);
+					libvlc_video_set_callbacks(mMediaPlayer, lock, unlock, display, (void*)&mContext);
+					libvlc_video_set_format(mMediaPlayer, "RGBA", (int)mVideoWidth, (int)mVideoHeight, (int)mVideoWidth * 4);
+
+					// Update the playing state
+					mIsPlaying = true;
+					mFadeIn = 0.0f;
 				}
-				if (mVideoHeight > mSize.y()) {
-					float ratio = (float)mVideoHeight / mSize.y();
-					mVideoHeight = (unsigned)mSize.y();
-					mVideoWidth = (unsigned)((float)mVideoWidth / ratio);
-				}
-
-				setupContext();
-
-				// Setup the media player
-				mMediaPlayer = libvlc_media_player_new_from_media(mMedia);
-				libvlc_media_player_play(mMediaPlayer);
-				libvlc_video_set_callbacks(mMediaPlayer, lock, unlock, display, (void*)&mContext);
-				libvlc_video_set_format(mMediaPlayer, "RGBA", (int)mVideoWidth, (int)mVideoHeight, (int)mVideoWidth * 4);
-
-				// Update the playing state
-				mIsPlaying = true;
-				mFadeIn = 0.0f;
 			}
 		}
 	}
