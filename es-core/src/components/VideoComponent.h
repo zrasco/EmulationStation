@@ -22,6 +22,17 @@ struct VideoContext {
 
 class VideoComponent : public GuiComponent
 {
+	// Structure that groups together the configuration of the video component
+	struct Configuration
+	{
+		unsigned						startDelay;
+		bool							showSnapshotNoVideo;
+		bool							showSnapshotDelay;
+		std::string						defaultVideoPath;
+		bool							maintainAspect;
+		bool							blackBorder;
+	};
+
 public:
 	static void setupVLC();
 
@@ -44,12 +55,6 @@ public:
 	//Sets the origin as a percentage of this image (e.g. (0, 0) is top left, (0.5, 0.5) is the center)
 	void setOrigin(float originX, float originY);
 	inline void setOrigin(Eigen::Vector2f origin) { setOrigin(origin.x(), origin.y()); }
-
-	// Theme configuration
-	void setStartDelay(float seconds);
-	void setShowSnapshotNoVideo(bool show);
-	void setShowSnapshotDelay(bool show);
-	void setDefaultVideoPath(std::string path);
 
 	void onSizeChanged() override;
 	void setOpacity(unsigned char opacity) override;
@@ -83,10 +88,6 @@ private:
 	unsigned						mVideoWidth;
 	unsigned						mVideoHeight;
 	Eigen::Vector2f 				mOrigin;
-	unsigned						mStartDelay;
-	bool							mShowSnapshotNoVideo;
-	bool							mShowSnapshotDelay;
-	std::string						mDefaultVideoPath;
 	boost::filesystem::path			mVideoPath;
 	bool							mStartDelayed;
 	unsigned						mStartTime;
@@ -94,8 +95,9 @@ private:
 	std::shared_ptr<TextureResource> mTexture;
 	float							mFadeIn;
 	std::string						mStaticImagePath;
-
 	ImageComponent					mStaticImage;
+
+	Configuration					mConfig;
 };
 
 #endif

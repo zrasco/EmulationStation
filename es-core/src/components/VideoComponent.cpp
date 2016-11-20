@@ -31,12 +31,23 @@ static void display(void *data, void *id) {
     //Data to be displayed
 }
 
-VideoComponent::VideoComponent(Window* window) : GuiComponent(window), mStaticImage(window),
-	mMediaPlayer(nullptr), mVideoHeight(0), mVideoWidth(0),
-	mStartDelay(0), mStartDelayed(false), mIsPlaying(false),
-	mShowSnapshotDelay(false), mShowSnapshotNoVideo(false)
+VideoComponent::VideoComponent(Window* window) :
+	GuiComponent(window),
+	mStaticImage(window),
+	mMediaPlayer(nullptr),
+	mVideoHeight(0),
+	mVideoWidth(0),
+	mStartDelayed(false),
+	mIsPlaying(false)
 {
 	memset(&mContext, 0, sizeof(mContext));
+
+	// Setup the default configuration
+	mConfig.showSnapshotDelay 		= false;
+	mConfig.showSnapshotNoVideo		= false;
+	mConfig.startDelay				= 0.5;
+	mConfig.maintainAspect			= false;
+	mConfig.blackBorder				= true;
 
 	// Get an empty texture for rendering the video
 	mTexture = TextureResource::get("");
@@ -73,6 +84,7 @@ void VideoComponent::onSizeChanged()
 
 bool VideoComponent::setVideo(std::string path)
 {
+	// Convert the path into a format VLC can understand
 	boost::filesystem::path fullPath = getCanonicalPath(path);
 	fullPath.make_preferred().native();
 
@@ -95,7 +107,7 @@ bool VideoComponent::setVideo(std::string path)
 
 		// If there is a startup delay then the video will be started in the future
 		// by the render() function otherwise start it now
-		if (mStartDelay == 0)
+		if (mConfig.startDelay == 0)
 		{
 			mStartDelayed = false;
 			// See if we need to start the new one playing
@@ -107,7 +119,7 @@ bool VideoComponent::setVideo(std::string path)
 		{
 			mStartDelayed = true;
 			mFadeIn = 0.0f;
-			mStartTime = SDL_GetTicks() + mStartDelay;
+			mStartTime = SDL_GetTicks() + mConfig.startDelay;
 		}
 		// Return true to show that we are going to attempt to play a video
 		return true;
@@ -131,7 +143,7 @@ void VideoComponent::setImage(std::string path)
 
 void VideoComponent::setDefaultVideo()
 {
-	setVideo(mDefaultVideoPath);
+	setVideo(mConfig.defaultVideoPath);
 }
 
 void VideoComponent::setOpacity(unsigned char opacity)
@@ -150,7 +162,10 @@ void VideoComponent::render(const Eigen::Affine3f& parentTrans)
 
 	Renderer::setMatrix(trans);
 	
+	// Handle the case where the video is delayed
 	handleStartDelay();
+
+	// Handle looping of the video
 	handleLooping();
 
 	if (mIsPlaying)
@@ -168,12 +183,18 @@ void VideoComponent::render(const Eigen::Affine3f& parentTrans)
 		x2 = x+mSize.x();
 		y2 = y+mSize.y();
 
-		if (maintain_aspect) {
-			if (!black_border) {
+		// Calculate the dimensions based on whether the configuration says whether to maintain
+		// the aspect ratio of the video or not
+		if (mConfig.maintainAspect)
+		{
+			// We need to maintain the aspect ratio
+			if (!mConfig.blackBorder) {
+				// No black border
 				tex_offs_x = (1.0f - (mVideoWidth / (float)mSize.x())) / 2.0f;
 				tex_offs_y = (1.0f - (mVideoHeight / (float)mSize.y())) / 2.0f;
 			}
 			else {
+				// Calculate the size to include a black border
 				x = -(float)mVideoWidth * mOrigin.x();
 				y = -(float)mVideoHeight * mOrigin.y();
 				x2 = x + mVideoWidth;
@@ -181,7 +202,7 @@ void VideoComponent::render(const Eigen::Affine3f& parentTrans)
 			}
 		}
 
-
+		// Define a structure to contain the data for each vertex
 		struct Vertex
 		{
 			Eigen::Vector2f pos;
@@ -189,7 +210,7 @@ void VideoComponent::render(const Eigen::Affine3f& parentTrans)
 			Eigen::Vector3f colour;
 		} vertices[6];
 
-
+		// We need two triangles to cover the rectangular area
 		vertices[0].pos[0] = x; 			vertices[0].pos[1] = y;
 		vertices[1].pos[0] = x; 			vertices[1].pos[1] = y2;
 		vertices[2].pos[0] = x2;			vertices[2].pos[1] = y;
@@ -198,6 +219,7 @@ void VideoComponent::render(const Eigen::Affine3f& parentTrans)
 		vertices[4].pos[0] = x; 			vertices[4].pos[1] = y2;
 		vertices[5].pos[0] = x2;			vertices[5].pos[1] = y2;
 
+		// Texture coordinates
 		vertices[0].tex[0] = -tex_offs_x; 			vertices[0].tex[1] = -tex_offs_y;
 		vertices[1].tex[0] = -tex_offs_x; 			vertices[1].tex[1] = 1.0f + tex_offs_y;
 		vertices[2].tex[0] = 1.0f + tex_offs_x;		vertices[2].tex[1] = -tex_offs_y;
@@ -206,14 +228,17 @@ void VideoComponent::render(const Eigen::Affine3f& parentTrans)
 		vertices[4].tex[0] = -tex_offs_x;			vertices[4].tex[1] = 1.0f + tex_offs_y;
 		vertices[5].tex[0] = 1.0f + tex_offs_x;		vertices[5].tex[1] = 1.0f + tex_offs_y;
 
+		// Colours - use this to fade the video in and out
 		for (int i = 0; i < (3 * 6); ++i)
 			vertices[i / 3].colour[i % 3] = mFadeIn;
 
 		glEnable(GL_TEXTURE_2D);
 
+		// Build a texture for the video frame
 		mTexture->initFromPixels((unsigned char*)mContext.surface->pixels, mContext.surface->w, mContext.surface->h);
 		mTexture->bind();
 
+		// Render it
 		glEnableClientState(GL_COLOR_ARRAY);
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -232,7 +257,9 @@ void VideoComponent::render(const Eigen::Affine3f& parentTrans)
 	}
 	else
 	{
-		if ((mShowSnapshotNoVideo && mVideoPath.empty()) || (mStartDelayed && mShowSnapshotDelay))
+		// This is the case where the video is not currently being displayed. Work out
+		// if we need to display a static image
+		if ((mConfig.showSnapshotNoVideo && mVideoPath.empty()) || (mStartDelayed && mConfig.showSnapshotDelay))
 		{
 			// Display the static image instead
 			mStaticImage.setOpacity((unsigned char)(mFadeIn * 255.0f));
@@ -254,38 +281,39 @@ void VideoComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const s
 
 	Eigen::Vector2f scale = getParent() ? getParent()->getSize() : Eigen::Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
 
-	if(properties & POSITION && elem->has("pos"))
+	if ((properties & POSITION) && elem->has("pos"))
 	{
 		Eigen::Vector2f denormalized = elem->get<Eigen::Vector2f>("pos").cwiseProduct(scale);
 		setPosition(Eigen::Vector3f(denormalized.x(), denormalized.y(), 0));
 	}
 
-	if(properties & ThemeFlags::SIZE && elem->has("size"))
+	if ((properties & ThemeFlags::SIZE) && elem->has("size"))
 	{
 		setSize(elem->get<Eigen::Vector2f>("size").cwiseProduct(scale));
 	}
 
 	// position + size also implies origin
-	if((properties & ORIGIN || (properties & POSITION && properties & ThemeFlags::SIZE)) && elem->has("origin"))
+	if (((properties & ORIGIN) || ((properties & POSITION) && (properties & ThemeFlags::SIZE))) && elem->has("origin"))
 		setOrigin(elem->get<Eigen::Vector2f>("origin"));
 
 	if(elem->has("default"))
-	{
-		setDefaultVideoPath(elem->get<std::string>("default"));
-	}
+		mConfig.defaultVideoPath = elem->get<std::string>("default");
 
-	if(properties & ThemeFlags::DELAY && elem->has("delay"))
-	{
-		setStartDelay(elem->get<float>("delay"));
-	}
+	if((properties & ThemeFlags::DELAY) && elem->has("delay"))
+		mConfig.startDelay = elem->get<float>("delay");
+
 	if (elem->has("showSnapshotNoVideo"))
-	{
-		setShowSnapshotNoVideo(elem->get<bool>("showSnapshotNoVideo"));
-	}
+		mConfig.showSnapshotNoVideo = elem->get<bool>("showSnapshotNoVideo");
+
 	if (elem->has("showSnapshotDelay"))
-	{
-		setShowSnapshotDelay(elem->get<bool>("showSnapshotDelay"));
-	}
+		mConfig.showSnapshotDelay = elem->get<bool>("showSnapshotDelay");
+
+	if (elem->has("maintainAspect"))
+		mConfig.maintainAspect = elem->get<bool>("maintainAspect");
+
+	if (elem->has("blackBorder"))
+		mConfig.blackBorder = elem->get<bool>("blackBorder");
+
 	// Update the embeded static image
 	mStaticImage.setPosition(getPosition());
 	mStaticImage.setMaxSize(getSize());
@@ -328,26 +356,6 @@ void VideoComponent::setupVLC()
 		const char* args[] = { "--quiet" };
 		mVLC = libvlc_new(sizeof(args) / sizeof(args[0]), args);
 	}
-}
-
-void VideoComponent::setStartDelay(float seconds)
-{
-	mStartDelay = (unsigned)(seconds * 1000.0f);
-}
-
-void VideoComponent::setShowSnapshotNoVideo(bool show)
-{
-	mShowSnapshotNoVideo = show;
-}
-
-void VideoComponent::setShowSnapshotDelay(bool show)
-{
-	mShowSnapshotDelay = show;
-}
-
-void VideoComponent::setDefaultVideoPath(std::string path)
-{
-	mDefaultVideoPath = path;
 }
 
 void VideoComponent::handleStartDelay()
