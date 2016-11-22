@@ -45,7 +45,7 @@ VideoComponent::VideoComponent(Window* window) :
 	// Setup the default configuration
 	mConfig.showSnapshotDelay 		= false;
 	mConfig.showSnapshotNoVideo		= false;
-	mConfig.startDelay				= 0.5;
+	mConfig.startDelay				= 500;
 	mConfig.maintainAspect			= false;
 	mConfig.blackBorder				= true;
 
@@ -300,7 +300,7 @@ void VideoComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const s
 		mConfig.defaultVideoPath = elem->get<std::string>("default");
 
 	if((properties & ThemeFlags::DELAY) && elem->has("delay"))
-		mConfig.startDelay = elem->get<float>("delay");
+		mConfig.startDelay = (unsigned)(elem->get<float>("delay") * 1000.0f);
 
 	if (elem->has("showSnapshotNoVideo"))
 		mConfig.showSnapshotNoVideo = elem->get<bool>("showSnapshotNoVideo");
