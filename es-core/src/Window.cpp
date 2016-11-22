@@ -10,7 +10,7 @@
 #include "components/ImageComponent.h"
 
 Window::Window() : mNormalizeNextUpdate(false), mFrameTimeElapsed(0), mFrameCountElapsed(0), mAverageDeltaTime(10), 
-	mAllowSleep(true), mSleeping(false), mTimeSinceLastInput(0)
+	mAllowSleep(true), mSleeping(false), mTimeSinceLastInput(0), mScreenSaver(NULL), mRenderScreenSaver(false)
 {
 	mHelp = new HelpComponent(this);
 	mBackgroundOverlay = new ImageComponent(this);
@@ -107,12 +107,14 @@ void Window::input(InputConfig* config, Input input)
 	{
 		// wake up
 		mTimeSinceLastInput = 0;
+		cancelScreenSaver();
 		mSleeping = false;
 		onWake();
 		return;
 	}
 
 	mTimeSinceLastInput = 0;
+	cancelScreenSaver();
 
 	if(config->getDeviceId() == DEVICE_KEYBOARD && input.value && input.id == SDLK_g && SDL_GetModState() & KMOD_LCTRL && Settings::getInstance()->getBool("Debug"))
 	{
@@ -171,6 +173,10 @@ void Window::update(int deltaTime)
 
 	if(peekGui())
 		peekGui()->update(deltaTime);
+
+	// Update the screensaver
+	if (mScreenSaver)
+		mScreenSaver->update(deltaTime);
 }
 
 void Window::render()
@@ -205,9 +211,15 @@ void Window::render()
 	unsigned int screensaverTime = (unsigned int)Settings::getInstance()->getInt("ScreenSaverTime");
 	if(mTimeSinceLastInput >= screensaverTime && screensaverTime != 0)
 	{
-		renderScreenSaver();
+		startScreenSaver();
+	}
 
-		if (!isProcessing() && mAllowSleep)
+	// Always render the screensaver because it may perform a fade on the transition
+	renderScreenSaver();
+
+	if(mTimeSinceLastInput >= screensaverTime && screensaverTime != 0)
+	{
+		if (!isProcessing() && mAllowSleep && (!mScreenSaver || mScreenSaver->allowSleep()))
 		{
 			// go to sleep
 			mSleeping = true;
@@ -344,9 +356,29 @@ bool Window::isProcessing()
 	return count_if(mGuiStack.begin(), mGuiStack.end(), [](GuiComponent* c) { return c->isProcessing(); }) > 0;
 }
 
+void Window::startScreenSaver()
+{
+	if (mScreenSaver && !mRenderScreenSaver)
+	{
+		mScreenSaver->startScreenSaver();
+		mRenderScreenSaver = true;
+	}
+}
+
+void Window::cancelScreenSaver()
+{
+	if (mScreenSaver && mRenderScreenSaver)
+	{
+		mScreenSaver->stopScreenSaver();
+		mRenderScreenSaver = false;
+	}
+}
+
 void Window::renderScreenSaver()
 {
-	Renderer::setMatrix(Eigen::Affine3f::Identity());
-	unsigned char opacity = Settings::getInstance()->getString("ScreenSaverBehavior") == "dim" ? 0xA0 : 0xFF;
-	Renderer::drawRect(0, 0, Renderer::getScreenWidth(), Renderer::getScreenHeight(), 0x00000000 | opacity);
+	if (mScreenSaver)
+	{
+		mScreenSaver->renderScreenSaver();
+	}
 }
+
