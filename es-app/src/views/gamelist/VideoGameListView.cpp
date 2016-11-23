@@ -11,6 +11,7 @@ VideoGameListView::VideoGameListView(Window* window, FileData* root) :
 	mMarquee(window),
 	mImage(window),
 	mVideo(window),
+	mVideoPlaying(false),
 
 	mLblRating(window), mLblReleaseDate(window), mLblDeveloper(window), mLblPublisher(window), 
 	mLblGenre(window), mLblPlayers(window), mLblLastPlayed(window), mLblPlayCount(window),
@@ -219,6 +220,7 @@ void VideoGameListView::updateInfoPanel()
 	{
 		mVideo.setVideo("");
 		mVideo.setImage("");
+		mVideoPlaying = false;
 		//mMarquee.setImage("");
 		//mDescription.setText("");
 		fadingOut = true;
@@ -248,6 +250,8 @@ void VideoGameListView::updateInfoPanel()
 		}
 		if (!mVideo.setVideo(video_path))
 			mVideo.setDefaultVideo();
+		else
+			mVideoPlaying = true;
 
 		mVideo.setImage(thumbnail_path);
 		mMarquee.setImage(marquee_path);
@@ -341,11 +345,24 @@ std::vector<GuiComponent*> VideoGameListView::getMDValues()
 void VideoGameListView::onShow()
 {
  	mVideo.startVideo();
+ 	mVideoPlaying = true;
 }
 
 void VideoGameListView::onHide()
 {
 	mVideo.stopVideo();
+	mVideoPlaying = false;
+}
+
+void VideoGameListView::onScreenSaverActivate()
+{
+	mVideo.stopVideo();
+}
+
+void VideoGameListView::onScreenSaverDeactivate()
+{
+	if (mVideoPlaying)
+		mVideo.startVideo();
 }
 
 void VideoGameListView::update(int deltaTime)

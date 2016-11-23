@@ -21,6 +21,8 @@ protected:
 	
 	virtual void onShow() override;
 	virtual void onHide() override;
+	virtual void onScreenSaverActivate() override;
+	virtual void onScreenSaverDeactivate() override;
 	virtual void update(int deltaTime) override;
 
 private:
@@ -49,5 +51,7 @@ private:
 
 	ScrollableContainer mDescContainer;
 	TextComponent mDescription;
+
+	bool		mVideoPlaying;
 
 };

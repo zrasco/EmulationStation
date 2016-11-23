@@ -105,21 +105,24 @@ bool VideoComponent::setVideo(std::string path)
 		// Store the path
 		mVideoPath = fullPath;
 
-		// If there is a startup delay then the video will be started in the future
-		// by the render() function otherwise start it now
-		if (mConfig.startDelay == 0)
-		{
-			mStartDelayed = false;
-			// See if we need to start the new one playing
-			if (playing) {
+		// If there was a previous video playing then we need to check to see if there
+		// is a startup delay configured. The delay is there to stop videos from being
+		// started and stopped in quick succession due to scrolling a gamelist so we only
+		// need to apply it when setting a new video when one was already playing
+		if (playing) {
+			if (mConfig.startDelay == 0)
+			{
+				// No delay. Just start the video
+				mStartDelayed = false;
 				startVideo();
 			}
-		}
-		else
-		{
-			mStartDelayed = true;
-			mFadeIn = 0.0f;
-			mStartTime = SDL_GetTicks() + mConfig.startDelay;
+			else
+			{
+				// Configure the start delay
+				mStartDelayed = true;
+				mFadeIn = 0.0f;
+				mStartTime = SDL_GetTicks() + mConfig.startDelay;
+			}
 		}
 		// Return true to show that we are going to attempt to play a video
 		return true;

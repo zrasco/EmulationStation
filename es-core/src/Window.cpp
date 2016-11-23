@@ -208,7 +208,8 @@ void Window::render()
 		mDefaultFonts.at(1)->renderTextCache(mFrameDataText.get());
 	}
 
-	unsigned int screensaverTime = (unsigned int)Settings::getInstance()->getInt("ScreenSaverTime");
+	//unsigned int screensaverTime = (unsigned int)Settings::getInstance()->getInt("ScreenSaverTime");
+	unsigned int screensaverTime = 10000;
 	if(mTimeSinceLastInput >= screensaverTime && screensaverTime != 0)
 	{
 		startScreenSaver();
@@ -360,6 +361,10 @@ void Window::startScreenSaver()
 {
 	if (mScreenSaver && !mRenderScreenSaver)
 	{
+		// Tell the GUI components the screensaver is starting
+		for(auto i = mGuiStack.begin(); i != mGuiStack.end(); i++)
+			(*i)->onScreenSaverActivate();
+
 		mScreenSaver->startScreenSaver();
 		mRenderScreenSaver = true;
 	}
@@ -371,6 +376,10 @@ void Window::cancelScreenSaver()
 	{
 		mScreenSaver->stopScreenSaver();
 		mRenderScreenSaver = false;
+
+		// Tell the GUI components the screensaver has stopped
+		for(auto i = mGuiStack.begin(); i != mGuiStack.end(); i++)
+			(*i)->onScreenSaverDeactivate();
 	}
 }
 
