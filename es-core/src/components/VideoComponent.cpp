@@ -94,11 +94,12 @@ bool VideoComponent::setVideo(std::string path)
 	if (fullPath == mVideoPath)
 		return !path.empty();
 
+	// Store the path
+	mVideoPath = fullPath;
+
 	// If the file exists then set the new video
 	if (!fullPath.empty() && ResourceManager::getInstance()->fileExists(fullPath.generic_string()))
 	{
-		// Store the path
-		mVideoPath = fullPath;
 		// Return true to show that we are going to attempt to play a video
 		return true;
 	}
@@ -523,7 +524,7 @@ void VideoComponent::manageState()
 	if (!mIsPlaying)
 	{
 		// If we are on display then see if we should start the video
-		if (show)
+		if (show && !mVideoPath.empty())
 		{
 			startVideoWithDelay();
 		}

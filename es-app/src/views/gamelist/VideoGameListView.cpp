@@ -250,8 +250,7 @@ void VideoGameListView::updateInfoPanel()
 		}
 		if (!mVideo.setVideo(video_path))
 			mVideo.setDefaultVideo();
-		else
-			mVideoPlaying = true;
+		mVideoPlaying = true;
 
 		mVideo.setImage(thumbnail_path);
 		mMarquee.setImage(marquee_path);
