@@ -38,14 +38,16 @@ VideoComponent::VideoComponent(Window* window) :
 	mVideoHeight(0),
 	mVideoWidth(0),
 	mStartDelayed(false),
-	mIsPlaying(false)
+	mIsPlaying(false),
+	mShowing(false),
+	mScreensaverActive(false)
 {
 	memset(&mContext, 0, sizeof(mContext));
 
 	// Setup the default configuration
 	mConfig.showSnapshotDelay 		= false;
 	mConfig.showSnapshotNoVideo		= false;
-	mConfig.startDelay				= 500;
+	mConfig.startDelay				= 0;
 	mConfig.maintainAspect			= false;
 	mConfig.blackBorder				= true;
 
@@ -59,7 +61,7 @@ VideoComponent::VideoComponent(Window* window) :
 VideoComponent::~VideoComponent()
 {
 	// Stop any currently running video
-	setVideo("");
+	stopVideo();
 }
 
 void VideoComponent::setOrigin(float originX, float originY)
@@ -92,38 +94,11 @@ bool VideoComponent::setVideo(std::string path)
 	if (fullPath == mVideoPath)
 		return !path.empty();
 
-	// See if the video was playing because we'll restart it if it was
-	bool playing = mIsPlaying;
-	
-	// Stop current video
-	stopVideo();
-	mVideoPath.clear();
-
-	// If the file exists then start the new video
+	// If the file exists then set the new video
 	if (!fullPath.empty() && ResourceManager::getInstance()->fileExists(fullPath.generic_string()))
 	{
 		// Store the path
 		mVideoPath = fullPath;
-
-		// If there was a previous video playing then we need to check to see if there
-		// is a startup delay configured. The delay is there to stop videos from being
-		// started and stopped in quick succession due to scrolling a gamelist so we only
-		// need to apply it when setting a new video when one was already playing
-		if (playing) {
-			if (mConfig.startDelay == 0)
-			{
-				// No delay. Just start the video
-				mStartDelayed = false;
-				startVideo();
-			}
-			else
-			{
-				// Configure the start delay
-				mStartDelayed = true;
-				mFadeIn = 0.0f;
-				mStartTime = SDL_GetTicks() + mConfig.startDelay;
-			}
-		}
 		// Return true to show that we are going to attempt to play a video
 		return true;
 	}
@@ -171,7 +146,7 @@ void VideoComponent::render(const Eigen::Affine3f& parentTrans)
 	// Handle looping of the video
 	handleLooping();
 
-	if (mIsPlaying)
+	if (mIsPlaying && mContext.valid)
 	{
 		float tex_offs_x = 0.0f;
 		float tex_offs_y = 0.0f;
@@ -373,6 +348,8 @@ void VideoComponent::handleStartDelay()
 		}
 		// Completed
 		mStartDelayed = false;
+		// Clear the playing flag so startVideo works
+		mIsPlaying = false;
 		startVideo();
 	}
 }
@@ -406,6 +383,9 @@ void VideoComponent::startVideo()
 		// Make sure we have a video path
 		if (mVLC && (path.size() > 0))
 		{
+			// Set the video that we are going to be playing so we don't attempt to restart it
+			mPlayingVideoPath = mVideoPath;
+
 			// Open the media
 			mMedia = libvlc_media_new_path(mVLC, path.c_str());
 			if (mMedia)
@@ -446,6 +426,31 @@ void VideoComponent::startVideo()
 	}
 }
 
+void VideoComponent::startVideoWithDelay()
+{
+	// If not playing then either start the video or initiate the delay
+	if (!mIsPlaying)
+	{
+		// Set the video that we are going to be playing so we don't attempt to restart it
+		mPlayingVideoPath = mVideoPath;
+
+		if (mConfig.startDelay == 0)
+		{
+			// No delay. Just start the video
+			mStartDelayed = false;
+			startVideo();
+		}
+		else
+		{
+			// Configure the start delay
+			mStartDelayed = true;
+			mFadeIn = 0.0f;
+			mStartTime = SDL_GetTicks() + mConfig.startDelay;
+		}
+		mIsPlaying = true;
+	}
+}
+
 void VideoComponent::stopVideo()
 {
 	mIsPlaying = false;
@@ -463,6 +468,8 @@ void VideoComponent::stopVideo()
 
 void VideoComponent::update(int deltaTime)
 {
+	manageState();
+
 	// If the video start is delayed and there is less than the fade time then set the image fade
 	// accordingly
 	if (mStartDelayed)
@@ -486,4 +493,63 @@ void VideoComponent::update(int deltaTime)
 			mFadeIn = 1.0f;
 	}
 	GuiComponent::update(deltaTime);
+}
+
+void VideoComponent::manageState()
+{
+	// We will only show if the component is on display and the screensaver
+	// is not active
+	bool show = mShowing && !mScreensaverActive;
+
+	// See if we're already playing
+	if (mIsPlaying)
+	{
+		// If we are not on display then stop the video from playing
+		if (!show)
+		{
+			stopVideo();
+		}
+		else
+		{
+			if (mVideoPath != mPlayingVideoPath)
+			{
+				// Path changed. Stop the video. We will start it again below because
+				// mIsPlaying will be modified by stopVideo to be false
+				stopVideo();
+			}
+		}
+	}
+	// Need to recheck variable rather than 'else' because it may be modified above
+	if (!mIsPlaying)
+	{
+		// If we are on display then see if we should start the video
+		if (show)
+		{
+			startVideoWithDelay();
+		}
+	}
+}
+
+void VideoComponent::onShow()
+{
+	mShowing = true;
+	manageState();
+}
+
+void VideoComponent::onHide()
+{
+	mShowing = false;
+	manageState();
+}
+
+void VideoComponent::onScreenSaverActivate()
+{
+	mScreensaverActive = true;
+	manageState();
+}
+
+void VideoComponent::onScreenSaverDeactivate()
+{
+	mScreensaverActive = false;
+	manageState();
 }

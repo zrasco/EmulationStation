@@ -179,6 +179,10 @@ void ViewController::launch(FileData* game, Eigen::Vector3f center)
 		return;
 	}
 
+	// Hide the current view
+	if (mCurrentView)
+		mCurrentView->onHide();
+
 	Eigen::Affine3f origCamera = mCamera;
 	origCamera.translation() = -mCurrentView->getPosition();
 
@@ -372,6 +376,10 @@ void ViewController::reloadGameListView(IGameListView* view, bool reloadTheme)
 			break;
 		}
 	}
+	// Redisplay the current view
+	if (mCurrentView)
+		mCurrentView->onShow();
+
 }
 
 void ViewController::reloadAll()

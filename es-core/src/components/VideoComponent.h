@@ -47,10 +47,10 @@ public:
 	// Configures the component to show the default video
 	void setDefaultVideo();
 	
-	// Start the video
-	void startVideo();
-	// Stop the video
-	void stopVideo();
+	virtual void onShow() override;
+	virtual void onHide() override;
+	virtual void onScreenSaverActivate() override;
+	virtual void onScreenSaverDeactivate() override;
 
 	//Sets the origin as a percentage of this image (e.g. (0, 0) is top left, (0.5, 0.5) is the center)
 	void setOrigin(float originX, float originY);
@@ -71,6 +71,13 @@ public:
 	virtual void update(int deltaTime);
 
 private:
+	// Start the video Immediately
+	void startVideo();
+	// Start the video after any configured delay
+	void startVideoWithDelay();
+	// Stop the video
+	void stopVideo();
+
 	void setupContext();
 	void freeContext();
 
@@ -80,6 +87,9 @@ private:
 	// Handle looping the video. Must be called periodically
 	void handleLooping();
 
+	// Manage the playing state of the component
+	void manageState();
+
 private:
 	static libvlc_instance_t*		mVLC;
 	libvlc_media_t*					mMedia;
@@ -88,14 +98,18 @@ private:
 	unsigned						mVideoWidth;
 	unsigned						mVideoHeight;
 	Eigen::Vector2f 				mOrigin;
-	boost::filesystem::path			mVideoPath;
-	bool							mStartDelayed;
-	unsigned						mStartTime;
-	bool							mIsPlaying;
 	std::shared_ptr<TextureResource> mTexture;
 	float							mFadeIn;
 	std::string						mStaticImagePath;
 	ImageComponent					mStaticImage;
+
+	boost::filesystem::path			mVideoPath;
+	boost::filesystem::path			mPlayingVideoPath;
+	bool							mStartDelayed;
+	unsigned						mStartTime;
+	bool							mIsPlaying;
+	bool							mShowing;
+	bool							mScreensaverActive;
 
 	Configuration					mConfig;
 };

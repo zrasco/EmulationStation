@@ -308,9 +308,6 @@ void VideoGameListView::launch(FileData* game)
 	if(mMarquee.hasImage())
 		target << mVideo.getCenter().x(), mVideo.getCenter().y(), 0;
 
-	// Stop the video from playing
-	mVideo.stopVideo();
-
 	ViewController::get()->launch(game, target);
 }
 
@@ -340,29 +337,6 @@ std::vector<GuiComponent*> VideoGameListView::getMDValues()
 	ret.push_back(&mLastPlayed);
 	ret.push_back(&mPlayCount);
 	return ret;
-}
-
-void VideoGameListView::onShow()
-{
- 	mVideo.startVideo();
- 	mVideoPlaying = true;
-}
-
-void VideoGameListView::onHide()
-{
-	mVideo.stopVideo();
-	mVideoPlaying = false;
-}
-
-void VideoGameListView::onScreenSaverActivate()
-{
-	mVideo.stopVideo();
-}
-
-void VideoGameListView::onScreenSaverDeactivate()
-{
-	if (mVideoPlaying)
-		mVideo.startVideo();
 }
 
 void VideoGameListView::update(int deltaTime)

@@ -47,7 +47,7 @@ void SystemScreenSaver::startScreenSaver()
 			mVideoScreensaver->setPosition(0.0f, 0.0f);
 			mVideoScreensaver->setSize(Renderer::getScreenWidth(), Renderer::getScreenHeight());
 			mVideoScreensaver->setVideo(path);
-			mVideoScreensaver->startVideo();
+			mVideoScreensaver->onShow();
 			mTimer = 0;
 		}
 		else

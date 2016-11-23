@@ -19,10 +19,6 @@ public:
 protected:
 	virtual void launch(FileData* game) override;
 	
-	virtual void onShow() override;
-	virtual void onHide() override;
-	virtual void onScreenSaverActivate() override;
-	virtual void onScreenSaverDeactivate() override;
 	virtual void update(int deltaTime) override;
 
 private:
