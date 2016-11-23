@@ -3,6 +3,7 @@
 #include "Renderer.h"
 #include "Settings.h"
 #include "SystemData.h"
+#include "Util.h"
 
 #define FADE_TIME 			3000
 #define SWAP_VIDEO_TIMEOUT	30000
@@ -45,7 +46,7 @@ void SystemScreenSaver::startScreenSaver()
 			mVideoScreensaver = new VideoComponent(mWindow);
 			mVideoScreensaver->setOrigin(0.0f, 0.0f);
 			mVideoScreensaver->setPosition(0.0f, 0.0f);
-			mVideoScreensaver->setSize(Renderer::getScreenWidth(), Renderer::getScreenHeight());
+			mVideoScreensaver->setSize((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
 			mVideoScreensaver->setVideo(path);
 			mVideoScreensaver->onShow();
 			mTimer = 0;
@@ -124,7 +125,7 @@ void SystemScreenSaver::pickRandomVideo(std::string& path)
 	countVideos();
 	if (mVideoCount > 0)
 	{
-		srand(time(NULL));
+		srand((unsigned int)time(NULL));
 		int video = (int)(((float)rand() / float(RAND_MAX)) * (float)mVideoCount);
 
 		std::vector<SystemData*>:: iterator it;
@@ -147,9 +148,11 @@ void SystemScreenSaver::pickRandomVideo(std::string& path)
 					pugi::xml_node videoNode = fileNode.child("video");
 					if (videoNode)
 					{
+						// See if this is the randomly selected video
 						if (video-- == 0)
 						{
-							path = videoNode.text().get();
+							// Yes. Resolve to a full path
+							path = resolvePath(videoNode.text().get(), (*it)->getStartPath(), true).generic_string();
 							return;
 						}
 					}

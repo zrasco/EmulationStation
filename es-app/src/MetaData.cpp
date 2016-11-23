@@ -101,7 +101,7 @@ void MetaDataList::appendToXML(pugi::xml_node parent, bool ignoreDefaults, const
 			
 			// try and make paths relative if we can
 			std::string value = mapIter->second;
-			if(mddIter->type == MD_IMAGE_PATH)
+			if ((mddIter->type == MD_IMAGE_PATH) || (mddIter->type == MD_VIDEO_PATH) || (mddIter->type == MD_MARQUEE_PATH))
 				value = makeRelativePath(value, relativeTo, true).generic_string();
 
 			parent.append_child(mapIter->first.c_str()).text().set(value.c_str());
