@@ -201,8 +201,10 @@ void VideoPlayerComponent::startVideo()
 			}
 			else
 			{
+				float x = mPosition.x() - (mOrigin.x() * mSize.x());
+				float y = mPosition.y() - (mOrigin.y() * mSize.y());
 				char buf[512];
-				sprintf(buf, "%d,%d,%d,%d", (int)mPosition.x(), (int)mPosition.y(), (int)(mPosition.x() + mSize.x()), (int)(mPosition.y() + mSize.y()));
+				sprintf(buf, "%d,%d,%d,%d", (int)x, (int)y, (int)(x + mSize.x()), (int)(y + mSize.y()));
 
 				const char* argv[] = { "", "--win", buf, "--layer", "10000", "--loop", "--no-osd", "", NULL };
 				//const char* argv[] = { "", "-noborder", "-ao", "null", "-vo", "xv", "-display", ":0", "-geometry", "320x200+700+500", "/home/roy/tmp/MameVideosMkv/720.mkv", NULL };
@@ -305,5 +307,6 @@ void VideoPlayerComponent::onShow()
 void VideoPlayerComponent::onHide()
 {
 	mShowing = false;
+	manageState();
 }
 
