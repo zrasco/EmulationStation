@@ -196,14 +196,20 @@ void VideoPlayerComponent::startVideo()
 				mPlayingVideoPath = "";
 			}
 			else if (pid > 0)
+			{
 				mPlayerPid = pid;
+			}
 			else
 			{
-				printf("Child\n");
-				const char* argv[] = { "", "-noborder", "-ao", "null", "-vo", "xv", "-display", ":0", "-geometry", "320x200+700+500", "/home/roy/tmp/MameVideosMkv/720.mkv", NULL };
-				const char* env[] = { NULL };
-				argv[10] = mPlayingVideoPath.c_str();
-				execve("/usr/bin/mplayer", (char**)argv, (char**)env);
+				char buf[512];
+				sprintf(buf, "%d,%d,%d,%d", (int)mPosition.x(), (int)mPosition.y(), (int)(mPosition.x() + mSize.x()), (int)(mPosition.y() + mSize.y()));
+
+				const char* argv[] = { "", "--win", buf, "--layer", "10000", "--loop", "--no-osd", "", NULL };
+				//const char* argv[] = { "", "-noborder", "-ao", "null", "-vo", "xv", "-display", ":0", "-geometry", "320x200+700+500", "/home/roy/tmp/MameVideosMkv/720.mkv", NULL };
+				const char* env[] = { "LD_LIBRARY_PATH=/opt/vc/libs:/usr/lib/omxplayer", NULL };
+				argv[7] = mPlayingVideoPath.c_str();
+				execve("/usr/bin/omxplayer.bin", (char**)argv, (char**)env);
+				//execve("/usr/bin/mplayer", (char**)argv, (char**)env);
 				_exit(EXIT_FAILURE);
 			}
 		}
@@ -299,7 +305,5 @@ void VideoPlayerComponent::onShow()
 void VideoPlayerComponent::onHide()
 {
 	mShowing = false;
-	manageState();
 }
-
 
