@@ -1,3 +1,4 @@
+#ifdef _RPI_
 #ifndef _VIDEOPLAYERCOMPONENT_H_
 #define _VIDEOPLAYERCOMPONENT_H_
 
@@ -25,3 +26,5 @@ private:
 };
 
 #endif
+#endif
+

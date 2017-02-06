@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #ifdef _RPI_
 #include "components/VideoPlayerComponent.h"
+#include "Settings.h"
 #endif
 #include "components/VideoVlcComponent.h"
 
@@ -27,7 +28,7 @@ VideoGameListView::VideoGameListView(Window* window, FileData* root) :
 
 	// Create the correct type of video window
 #ifdef _RPI_
-	if (Settings::getBool("VideoOmxPlayer"))
+	if (Settings::getInstance()->getBool("VideoOmxPlayer"))
 		mVideo = new VideoPlayerComponent(window);
 	else
 		mVideo = new VideoVlcComponent(window);

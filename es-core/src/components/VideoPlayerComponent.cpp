@@ -1,9 +1,13 @@
+#ifdef _RPI_
 #include "components/VideoPlayerComponent.h"
 #include "Renderer.h"
 #include "ThemeData.h"
 #include "Util.h"
 #include <signal.h>
 #include <wait.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 VideoPlayerComponent::VideoPlayerComponent(Window* window) :
 	VideoComponent(window),
@@ -62,6 +66,11 @@ void VideoPlayerComponent::startVideo()
 				const char* env[] = { "LD_LIBRARY_PATH=/opt/vc/libs:/usr/lib/omxplayer", NULL };
 				// Fill in the empty argument with the video path
 				argv[7] = mPlayingVideoPath.c_str();
+				// Redirect stdout
+				int fdin = open("/dev/null", O_RDONLY);
+				int fdout = open("/dev/null", O_WRONLY);
+				dup2(fdin, 0);
+				dup2(fdout, 1);
 				// Run the omxplayer binary
 				execve("/usr/bin/omxplayer.bin", (char**)argv, (char**)env);
 				_exit(EXIT_FAILURE);
@@ -84,4 +93,6 @@ void VideoPlayerComponent::stopVideo()
 		mPlayerPid = -1;
 	}
 }
+
+#endif
 
