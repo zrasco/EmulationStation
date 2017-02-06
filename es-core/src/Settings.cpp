@@ -74,6 +74,14 @@ void Settings::setDefaults()
 	mStringMap["ThemeSet"] = "";
 	mStringMap["ScreenSaverBehavior"] = "dim";
 	mStringMap["Scraper"] = "TheGamesDB";
+
+	// This setting only applies to raspberry pi but set it for all platforms so
+	// we don't get a warning if we encounter it on a different platform
+#ifdef _RPI_
+	mBoolMap["VideoOmxPlayer"] = true;
+#else
+	mBoolMap["VideoOmxPlayer"] = false;
+#endif
 }
 
 template <typename K, typename V>
