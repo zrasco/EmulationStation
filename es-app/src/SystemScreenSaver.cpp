@@ -1,5 +1,8 @@
 #include "SystemScreenSaver.h"
-#include "components/VideoComponent.h"
+#ifdef _RPI_
+#include "components/VideoPlayerComponent.h"
+#endif
+#include "components/VideoVlcComponent.h"
 #include "Renderer.h"
 #include "Settings.h"
 #include "SystemData.h"
@@ -43,7 +46,17 @@ void SystemScreenSaver::startScreenSaver()
 		pickRandomVideo(path);
 		if (!path.empty())
 		{
-			mVideoScreensaver = new VideoComponent(mWindow);
+	// Create the correct type of video component
+#ifdef _RPI_
+			if (Settings::getInstance()->getBool("VideoOmxPlayer"))
+				mVideoScreensaver = new VideoPlayerComponent(mWindow);
+			else
+				mVideoScreensaver = new VideoVlcComponent(mWindow);
+#else
+			mVideoScreensaver = new VideoVlcComponent(mWindow);
+#endif
+
+
 			mVideoScreensaver->setOrigin(0.0f, 0.0f);
 			mVideoScreensaver->setPosition(0.0f, 0.0f);
 			mVideoScreensaver->setSize((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());

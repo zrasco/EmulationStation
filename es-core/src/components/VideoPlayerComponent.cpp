@@ -17,6 +17,7 @@ VideoPlayerComponent::VideoPlayerComponent(Window* window) :
 
 VideoPlayerComponent::~VideoPlayerComponent()
 {
+	stopVideo();
 }
 
 void VideoPlayerComponent::render(const Eigen::Affine3f& parentTrans)

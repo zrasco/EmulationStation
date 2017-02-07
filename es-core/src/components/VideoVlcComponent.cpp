@@ -44,6 +44,7 @@ VideoVlcComponent::VideoVlcComponent(Window* window) :
 
 VideoVlcComponent::~VideoVlcComponent()
 {
+	stopVideo();
 }
 
 void VideoVlcComponent::render(const Eigen::Affine3f& parentTrans)
