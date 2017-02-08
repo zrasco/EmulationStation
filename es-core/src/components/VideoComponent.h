@@ -37,6 +37,9 @@ public:
 	
 	virtual void onShow() override;
 	virtual void onHide() override;
+	virtual void onScreenSaverActivate() override;
+	virtual void onScreenSaverDeactivate() override;
+	virtual void topWindow(bool isTop) override;
 
 	//Sets the origin as a percentage of this image (e.g. (0, 0) is top left, (0.5, 0.5) is the center)
 	void setOrigin(float originX, float originY);
@@ -87,6 +90,8 @@ protected:
 	unsigned						mStartTime;
 	bool							mIsPlaying;
 	bool							mShowing;
+	bool							mDisable;
+	bool							mScreensaverActive;
 
 	Configuration					mConfig;
 };

@@ -32,7 +32,7 @@ void Window::pushGui(GuiComponent* gui)
 	if (mGuiStack.size() > 0)
 	{
 		auto& top = mGuiStack.back();
-		top->onHide();
+		top->topWindow(false);
 	}
 	mGuiStack.push_back(gui);
 	gui->updateHelpPrompts();
@@ -49,7 +49,7 @@ void Window::removeGui(GuiComponent* gui)
 			if(i == mGuiStack.end() && mGuiStack.size()) // we just popped the stack and the stack is not empty
 			{
 				mGuiStack.back()->updateHelpPrompts();
-				mGuiStack.back()->onShow();
+				mGuiStack.back()->topWindow(true);
 			}
 
 			return;

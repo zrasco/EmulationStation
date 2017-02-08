@@ -82,6 +82,7 @@ public:
 	virtual void onHide();
 	virtual void onScreenSaverActivate();		
 	virtual void onScreenSaverDeactivate();
+	virtual void topWindow(bool isTop);
 	
 	// Default implementation just handles <pos> and <size> tags as normalized float pairs.
 	// You probably want to keep this behavior for any derived classes as well as add your own.
