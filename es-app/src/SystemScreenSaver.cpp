@@ -47,7 +47,7 @@ void SystemScreenSaver::startScreenSaver()
 		// Load a random video
 		std::string path;
 		pickRandomVideo(path);
-		LOG(LogInfo) << "Starting Video at path \"" << path << "\"";
+		LOG(LogDebug) << "Starting Video at path \"" << path << "\"";
 		if (!path.empty())
 		{
 	// Create the correct type of video component
@@ -84,14 +84,14 @@ void SystemScreenSaver::stopScreenSaver()
 	mState = STATE_INACTIVE;
 }
 
-void SystemScreenSaver::writeSubtitle(const char* text) {
+void SystemScreenSaver::writeSubtitle(const char* systemName, const char* gameName) {
 	FILE* file = NULL; 
 	file = fopen(getTitlePath().c_str(), "w");
-	LOG(LogInfo) << "Writing \"" << text << "\" to file at \"" << getTitlePath().c_str() << "\"";
-	// 1
-	// 00:02:17,440 --> 00:02:20,375
-	fprintf(file, "1\n00:00:01,000 --> 00:00:28,000\n", text);
-	fprintf(file, "%s", text);
+	LOG(LogDebug) << "Writing \"" << systemName << "\" and \"" << gameName << "\" to file at \"" << getTitlePath().c_str() << "\"";
+	// <font color="#00ff00">
+	fprintf(file, "1\n00:00:01,000 --> 00:00:11,000\n");
+	fprintf(file, "%s\n", gameName);
+	fprintf(file, "-- %s --\n", systemName);
 	fflush(file);
 	fclose(file);
 	file = NULL;
@@ -187,7 +187,12 @@ void SystemScreenSaver::pickRandomVideo(std::string& path)
 						{
 							// Yes. Resolve to a full path
 							path = resolvePath(videoNode.text().get(), (*it)->getStartPath(), true).generic_string();
-							writeSubtitle("Testing!");
+
+							LOG(LogDebug) << "System Name: \"" << (*it)->getName() << "\"";
+							LOG(LogDebug) << "System Full Name: \"" << (*it)->getFullName() << "\"";
+							LOG(LogDebug) << "Game Name: \"" << fileNode.child("name").text().get() << "\"";
+
+							writeSubtitle((*it)->getFullName().c_str(), fileNode.child("name").text().get());
 							return;
 						}
 					}

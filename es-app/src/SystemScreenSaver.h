@@ -22,7 +22,7 @@ public:
 private:
 	void	countVideos();
 	void	pickRandomVideo(std::string& path);
-    void writeSubtitle(const char* text);
+    void	writeSubtitle(const char* systemName, const char* gameName);
 
 	enum STATE {
 		STATE_INACTIVE,
