@@ -20,6 +20,7 @@ public:
 private:
 	void	countVideos();
 	void	pickRandomVideo(std::string& path);
+    std::string	getTitlePath();
 
 	enum STATE {
 		STATE_INACTIVE,

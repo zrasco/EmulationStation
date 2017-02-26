@@ -11,7 +11,6 @@
 
 #define FADE_TIME 			3000
 #define SWAP_VIDEO_TIMEOUT	30000
-//#define SWAP_VIDEO_TIMEOUT	10000
 
 SystemScreenSaver::SystemScreenSaver(Window* window) :
 	mVideoScreensaver(NULL),
