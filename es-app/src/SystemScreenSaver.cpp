@@ -3,11 +3,13 @@
 #include "components/VideoPlayerComponent.h"
 #endif
 #include "components/VideoVlcComponent.h"
+#include "platform.h"
 #include "Renderer.h"
 #include "Settings.h"
 #include "SystemData.h"
 #include "Util.h"
 #include "Log.h"
+#include <stdio.h>
 
 #define FADE_TIME 			3000
 #define SWAP_VIDEO_TIMEOUT	30000
@@ -51,7 +53,7 @@ void SystemScreenSaver::startScreenSaver()
 	// Create the correct type of video component
 #ifdef _RPI_
 			if (Settings::getInstance()->getBool("VideoOmxPlayer"))
-				mVideoScreensaver = new VideoPlayerComponent(mWindow);
+				mVideoScreensaver = new VideoPlayerComponent(mWindow, true);
 			else
 				mVideoScreensaver = new VideoVlcComponent(mWindow);
 #else
@@ -80,6 +82,19 @@ void SystemScreenSaver::stopScreenSaver()
 	delete mVideoScreensaver;
 	mVideoScreensaver = NULL;
 	mState = STATE_INACTIVE;
+}
+
+void SystemScreenSaver::writeSubtitle(const char* text) {
+	FILE* file = NULL; 
+	file = fopen(getTitlePath().c_str(), "w");
+	LOG(LogInfo) << "Writing \"" << text << "\" to file at \"" << getTitlePath().c_str() << "\"";
+	// 1
+	// 00:02:17,440 --> 00:02:20,375
+	fprintf(file, "1\n00:00:01,000 --> 00:00:28,000\n", text);
+	fprintf(file, "%s", text);
+	fflush(file);
+	fclose(file);
+	file = NULL;
 }
 
 void SystemScreenSaver::renderScreenSaver()
@@ -172,6 +187,7 @@ void SystemScreenSaver::pickRandomVideo(std::string& path)
 						{
 							// Yes. Resolve to a full path
 							path = resolvePath(videoNode.text().get(), (*it)->getStartPath(), true).generic_string();
+							writeSubtitle("Testing!");
 							return;
 						}
 					}

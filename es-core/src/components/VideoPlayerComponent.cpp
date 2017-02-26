@@ -9,9 +9,15 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-VideoPlayerComponent::VideoPlayerComponent(Window* window) :
+std::string getTitlePath() {
+	std::string home = getHomePath();
+	return home + "/.emulationstation/last_title.txt";
+}
+
+VideoPlayerComponent::VideoPlayerComponent(Window* window, bool useSubtitles) :
 	VideoComponent(window),
-	mPlayerPid(-1)
+	mPlayerPid(-1),
+	subtitles(useSubtitles)
 {
 }
 
@@ -63,10 +69,21 @@ void VideoPlayerComponent::startVideo()
 				sprintf(buf, "%d,%d,%d,%d", (int)x, (int)y, (int)(x + mSize.x()), (int)(y + mSize.y()));
 				// We need to specify the layer of 10000 or above to ensure the video is displayed on top
 				// of our SDL display
-				const char* argv[] = { "", "--win", buf, "--layer", "10000", "--loop", "--no-osd", "-b", "--aspect-mode", "letterbox","", NULL };
+				const char* argv[] = { "", "--win", buf, "--layer", "10000", "--loop", "--no-osd", "-b", "--aspect-mode", "letterbox", "", "", "", "", "","", NULL };
+
+				if (subtitles) {	
+					argv[10] = "--subtitles";
+					argv[11] = getTitlePath().c_str();
+					argv[12] = "--no-ghost-box";
+					argv[13] = "--align"; 
+					argv[14] = "center";
+				}	
+				
+				//const char* argv[] = args;
 				const char* env[] = { "LD_LIBRARY_PATH=/opt/vc/libs:/usr/lib/omxplayer", NULL };
 				// Fill in the empty argument with the video path
-				argv[10] = mPlayingVideoPath.c_str();
+				//argv[10] = mPlayingVideoPath.c_str();
+				argv[15] = mPlayingVideoPath.c_str();
 				// Redirect stdout
 				int fdin = open("/dev/null", O_RDONLY);
 				int fdout = open("/dev/null", O_WRONLY);

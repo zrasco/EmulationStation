@@ -4,6 +4,8 @@
 
 class VideoComponent;
 
+std::string	getTitlePath();
+
 // Screensaver implementation for main window
 class SystemScreenSaver : public Window::ScreenSaver
 {
@@ -20,7 +22,7 @@ public:
 private:
 	void	countVideos();
 	void	pickRandomVideo(std::string& path);
-    std::string	getTitlePath();
+    void writeSubtitle(const char* text);
 
 	enum STATE {
 		STATE_INACTIVE,

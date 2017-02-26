@@ -7,10 +7,12 @@
 
 #include "components/VideoComponent.h"
 
+std::string getTitlePath();
+
 class VideoPlayerComponent : public VideoComponent
 {
 public:
-	VideoPlayerComponent(Window* window);
+	VideoPlayerComponent(Window* window, bool useSubtitles);
 	virtual ~VideoPlayerComponent();
 
 	void render(const Eigen::Affine3f& parentTrans) override;
@@ -23,6 +25,7 @@ private:
 
 private:
 	pid_t							mPlayerPid;
+	bool							subtitles;
 };
 
 #endif
