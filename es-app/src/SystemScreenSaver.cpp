@@ -7,9 +7,11 @@
 #include "Settings.h"
 #include "SystemData.h"
 #include "Util.h"
+#include "Log.h"
 
 #define FADE_TIME 			3000
 #define SWAP_VIDEO_TIMEOUT	30000
+//#define SWAP_VIDEO_TIMEOUT	10000
 
 SystemScreenSaver::SystemScreenSaver(Window* window) :
 	mVideoScreensaver(NULL),
@@ -44,6 +46,7 @@ void SystemScreenSaver::startScreenSaver()
 		// Load a random video
 		std::string path;
 		pickRandomVideo(path);
+		LOG(LogInfo) << "Starting Video at path \"" << path << "\"";
 		if (!path.empty())
 		{
 	// Create the correct type of video component
@@ -66,6 +69,7 @@ void SystemScreenSaver::startScreenSaver()
 		}
 		else
 		{
+			LOG(LogError) << "Path is empty! Path: \"" << path << "\"";
 			// No videos. Just use a standard screensaver
 			mState = STATE_SCREENSAVER_ACTIVE;
 		}
@@ -81,6 +85,9 @@ void SystemScreenSaver::stopScreenSaver()
 
 void SystemScreenSaver::renderScreenSaver()
 {
+	float lOpacity = mOpacity;
+	if (Settings::getInstance()->getBool("VideoOmxPlayer"))
+		lOpacity = 1.0f;
 	if (mVideoScreensaver)
 	{
 		// Only render the video if the state requires it
@@ -91,7 +98,7 @@ void SystemScreenSaver::renderScreenSaver()
 		}
 		// Handle any fade
 		Renderer::setMatrix(Eigen::Affine3f::Identity());
-		Renderer::drawRect(0, 0, Renderer::getScreenWidth(), Renderer::getScreenHeight(), (unsigned char)(mOpacity * 255));
+		Renderer::drawRect(0, 0, Renderer::getScreenWidth(), Renderer::getScreenHeight(), (unsigned char)(lOpacity * 255));
 	}
 	else if (mState != STATE_INACTIVE)
 	{
