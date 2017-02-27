@@ -3,14 +3,16 @@
 #include "components/VideoPlayerComponent.h"
 #endif
 #include "components/VideoVlcComponent.h"
+#include "platform.h"
 #include "Renderer.h"
 #include "Settings.h"
 #include "SystemData.h"
 #include "Util.h"
 #include "Log.h"
+#include <stdio.h>
 
 #define FADE_TIME 			3000
-#define SWAP_VIDEO_TIMEOUT	30000
+#define SWAP_VIDEO_TIMEOUT	35000
 
 SystemScreenSaver::SystemScreenSaver(Window* window) :
 	mVideoScreensaver(NULL),
@@ -26,6 +28,8 @@ SystemScreenSaver::SystemScreenSaver(Window* window) :
 
 SystemScreenSaver::~SystemScreenSaver()
 {
+	// Delete subtitle file, if existing
+	remove(getTitlePath().c_str());
 	delete mVideoScreensaver;
 }
 
@@ -45,13 +49,13 @@ void SystemScreenSaver::startScreenSaver()
 		// Load a random video
 		std::string path;
 		pickRandomVideo(path);
-		LOG(LogInfo) << "Starting Video at path \"" << path << "\"";
+		LOG(LogDebug) << "Starting Video at path \"" << path << "\"";
 		if (!path.empty())
 		{
-	// Create the correct type of video component
+		// Create the correct type of video component
 #ifdef _RPI_
 			if (Settings::getInstance()->getBool("VideoOmxPlayer"))
-				mVideoScreensaver = new VideoPlayerComponent(mWindow);
+				mVideoScreensaver = new VideoPlayerComponent(mWindow, true);
 			else
 				mVideoScreensaver = new VideoVlcComponent(mWindow);
 #else
@@ -80,6 +84,20 @@ void SystemScreenSaver::stopScreenSaver()
 	delete mVideoScreensaver;
 	mVideoScreensaver = NULL;
 	mState = STATE_INACTIVE;
+}
+
+void SystemScreenSaver::writeSubtitle(const char* systemName, const char* gameName) 
+{
+	FILE* file = fopen(getTitlePath().c_str(), "w");	
+	fprintf(file, "1\n00:00:01,000 --> 00:00:06,000\n");
+	fprintf(file, "%s\n", gameName);
+	fprintf(file, "<i>%s</i>\n\n", systemName);
+	fprintf(file, "2\n00:00:29,000 --> 00:00:35,000\n");
+	fprintf(file, "%s\n", gameName);
+	fprintf(file, "<i>%s</i>\n", systemName);
+	fflush(file);
+	fclose(file);
+	file = NULL;
 }
 
 void SystemScreenSaver::renderScreenSaver()
@@ -171,7 +189,8 @@ void SystemScreenSaver::pickRandomVideo(std::string& path)
 						if (video-- == 0)
 						{
 							// Yes. Resolve to a full path
-							path = resolvePath(videoNode.text().get(), (*it)->getStartPath(), true).generic_string();
+							path = resolvePath(videoNode.text().get(), (*it)->getStartPath(), true).generic_string();							
+							writeSubtitle((*it)->getFullName().c_str(), fileNode.child("name").text().get());
 							return;
 						}
 					}
