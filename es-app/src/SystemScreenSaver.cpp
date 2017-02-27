@@ -12,7 +12,7 @@
 #include <stdio.h>
 
 #define FADE_TIME 			3000
-#define SWAP_VIDEO_TIMEOUT	30000
+#define SWAP_VIDEO_TIMEOUT	35000
 
 SystemScreenSaver::SystemScreenSaver(Window* window) :
 	mVideoScreensaver(NULL),
@@ -28,6 +28,8 @@ SystemScreenSaver::SystemScreenSaver(Window* window) :
 
 SystemScreenSaver::~SystemScreenSaver()
 {
+	// Delete subtitle file, if existing
+	remove(getTitlePath().c_str());
 	delete mVideoScreensaver;
 }
 
@@ -50,7 +52,7 @@ void SystemScreenSaver::startScreenSaver()
 		LOG(LogDebug) << "Starting Video at path \"" << path << "\"";
 		if (!path.empty())
 		{
-	// Create the correct type of video component
+		// Create the correct type of video component
 #ifdef _RPI_
 			if (Settings::getInstance()->getBool("VideoOmxPlayer"))
 				mVideoScreensaver = new VideoPlayerComponent(mWindow, true);
@@ -84,14 +86,15 @@ void SystemScreenSaver::stopScreenSaver()
 	mState = STATE_INACTIVE;
 }
 
-void SystemScreenSaver::writeSubtitle(const char* systemName, const char* gameName) {
-	FILE* file = NULL; 
-	file = fopen(getTitlePath().c_str(), "w");
-	LOG(LogDebug) << "Writing \"" << systemName << "\" and \"" << gameName << "\" to file at \"" << getTitlePath().c_str() << "\"";
-	// <font color="#00ff00">
-	fprintf(file, "1\n00:00:01,000 --> 00:00:11,000\n");
+void SystemScreenSaver::writeSubtitle(const char* systemName, const char* gameName) 
+{
+	FILE* file = fopen(getTitlePath().c_str(), "w");	
+	fprintf(file, "1\n00:00:01,000 --> 00:00:06,000\n");
 	fprintf(file, "%s\n", gameName);
-	fprintf(file, "-- %s --\n", systemName);
+	fprintf(file, "<i>%s</i>\n\n", systemName);
+	fprintf(file, "2\n00:00:29,000 --> 00:00:35,000\n");
+	fprintf(file, "%s\n", gameName);
+	fprintf(file, "<i>%s</i>\n", systemName);
 	fflush(file);
 	fclose(file);
 	file = NULL;
@@ -186,12 +189,7 @@ void SystemScreenSaver::pickRandomVideo(std::string& path)
 						if (video-- == 0)
 						{
 							// Yes. Resolve to a full path
-							path = resolvePath(videoNode.text().get(), (*it)->getStartPath(), true).generic_string();
-
-							LOG(LogDebug) << "System Name: \"" << (*it)->getName() << "\"";
-							LOG(LogDebug) << "System Full Name: \"" << (*it)->getFullName() << "\"";
-							LOG(LogDebug) << "Game Name: \"" << fileNode.child("name").text().get() << "\"";
-
+							path = resolvePath(videoNode.text().get(), (*it)->getStartPath(), true).generic_string();							
 							writeSubtitle((*it)->getFullName().c_str(), fileNode.child("name").text().get());
 							return;
 						}

@@ -33,7 +33,8 @@ void VideoPlayerComponent::render(const Eigen::Affine3f& parentTrans)
 
 void VideoPlayerComponent::startVideo()
 {
-	if (!mIsPlaying) {
+	if (!mIsPlaying) 
+	{
 		mVideoWidth = 0;
 		mVideoHeight = 0;
 
@@ -69,21 +70,29 @@ void VideoPlayerComponent::startVideo()
 				sprintf(buf, "%d,%d,%d,%d", (int)x, (int)y, (int)(x + mSize.x()), (int)(y + mSize.y()));
 				// We need to specify the layer of 10000 or above to ensure the video is displayed on top
 				// of our SDL display
-				const char* argv[] = { "", "--win", buf, "--layer", "10000", "--loop", "--no-osd", "-b", "--aspect-mode", "letterbox", "", "", "", "", "","", NULL };
-
-				if (subtitles) {	
-					argv[10] = "--subtitles";
-					argv[11] = getTitlePath().c_str();
-					argv[12] = "--no-ghost-box";
-					argv[13] = "--align"; 
-					argv[14] = "center";
-				}	
+				const char* argv[] = { "", "--layer", "10010", "--loop", "--no-osd", "--aspect-mode", "letterbox", "--win", buf, "-b", "", "", "", "", "","", NULL };
+				
+				if (subtitles) 
+				{	
+					argv[7] = "--subtitles";
+					argv[8] = getTitlePath().c_str();
+					argv[9] = mPlayingVideoPath.c_str();
+					/*argv[10] = "--no-ghost-box";
+					argv[11] = "--align"; 
+					argv[12] = "center";*/
+					argv[15] = "";
+					
+				} 
+				else 
+				{
+					argv[10] = mPlayingVideoPath.c_str();
+				}
 				
 				//const char* argv[] = args;
 				const char* env[] = { "LD_LIBRARY_PATH=/opt/vc/libs:/usr/lib/omxplayer", NULL };
 				// Fill in the empty argument with the video path
 				//argv[10] = mPlayingVideoPath.c_str();
-				argv[15] = mPlayingVideoPath.c_str();
+				
 				// Redirect stdout
 				int fdin = open("/dev/null", O_RDONLY);
 				int fdout = open("/dev/null", O_WRONLY);
