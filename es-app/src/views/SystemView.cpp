@@ -122,6 +122,13 @@ bool SystemView::input(InputConfig* config, Input input)
 			ViewController::get()->goToGameList(getSelected());
 			return true;
 		}
+		if(config->isMappedTo("select", input))
+		{			
+			LOG(LogDebug) << "Should be launching screensaver by virtue of Select";
+			mWindow->startScreenSaver();
+			//mWindow->renderScreenSaver();
+			return false;
+		}
 	}else{
 		if(config->isMappedTo("left", input) || config->isMappedTo("right", input))
 			listInput(0);

@@ -22,6 +22,8 @@ SystemScreenSaver::SystemScreenSaver(Window* window) :
 	mState(STATE_INACTIVE),
 	mOpacity(0.0f),
 	mTimer(0)
+	mTimer(0),
+	mSystemName(NULL),
 {
 	mWindow->setScreenSaver(this);
 }
@@ -84,20 +86,6 @@ void SystemScreenSaver::stopScreenSaver()
 	delete mVideoScreensaver;
 	mVideoScreensaver = NULL;
 	mState = STATE_INACTIVE;
-}
-
-void SystemScreenSaver::writeSubtitle(const char* systemName, const char* gameName) 
-{
-	FILE* file = fopen(getTitlePath().c_str(), "w");	
-	fprintf(file, "1\n00:00:01,000 --> 00:00:06,000\n");
-	fprintf(file, "%s\n", gameName);
-	fprintf(file, "<i>%s</i>\n\n", systemName);
-	fprintf(file, "2\n00:00:29,000 --> 00:00:35,000\n");
-	fprintf(file, "%s\n", gameName);
-	fprintf(file, "<i>%s</i>\n", systemName);
-	fflush(file);
-	fclose(file);
-	file = NULL;
 }
 
 void SystemScreenSaver::renderScreenSaver()
@@ -171,6 +159,7 @@ void SystemScreenSaver::pickRandomVideo(std::string& path)
 			pugi::xml_document doc;
 			pugi::xml_node root;
 			std::string xmlReadPath = (*it)->getGamelistPath(false);
+			int gameIndex = 0;
 
 			if(boost::filesystem::exists(xmlReadPath))
 			{
@@ -189,11 +178,15 @@ void SystemScreenSaver::pickRandomVideo(std::string& path)
 						if (video-- == 0)
 						{
 							// Yes. Resolve to a full path
-							path = resolvePath(videoNode.text().get(), (*it)->getStartPath(), true).generic_string();							
-							writeSubtitle((*it)->getFullName().c_str(), fileNode.child("name").text().get());
+							path = resolvePath(videoNode.text().get(), (*it)->getStartPath(), true).generic_string();	
+							mSystemName = (*it)->getFullName().c_str();
+							mGameName = fileNode.child("name").text().get();
+							mGameIndex = gameIndex;
+							writeSubtitle();
 							return;
 						}
 					}
+					gameIndex++;
 				}
 			}
 		}
@@ -240,3 +233,7 @@ void SystemScreenSaver::update(int deltaTime)
 	if (mVideoScreensaver)
 		mVideoScreensaver->update(deltaTime);
 }
+
+{
+	if (mSystemName)
+		return mSystemName;

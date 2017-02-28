@@ -22,7 +22,14 @@ public:
 private:
 	void	countVideos();
 	void	pickRandomVideo(std::string& path);
-    void	writeSubtitle(const char* systemName, const char* gameName);
+    void	writeSubtitle();
+
+    // WIP
+
+    virtual const char* getSystemName();
+	virtual const char* getGameName();
+	virtual int getGameIndex();
+	void input(InputConfig* config, Input input);
 
 	enum STATE {
 		STATE_INACTIVE,
@@ -39,4 +46,7 @@ private:
 	STATE			mState;
 	float			mOpacity;
 	int				mTimer;
+	int   			mGameIndex;
+	const char*		mGameName;
+	const char*		mSystemName;	
 };

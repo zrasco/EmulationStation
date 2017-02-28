@@ -85,7 +85,7 @@ void VideoPlayerComponent::startVideo()
 				} 
 				else 
 				{
-					argv[10] = mPlayingVideoPath.c_str();
+					argv[9] = mPlayingVideoPath.c_str();
 				}
 				
 				//const char* argv[] = args;
