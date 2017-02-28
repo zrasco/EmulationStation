@@ -21,9 +21,10 @@ SystemScreenSaver::SystemScreenSaver(Window* window) :
 	mVideoCount(0),
 	mState(STATE_INACTIVE),
 	mOpacity(0.0f),
-	mTimer(0)
 	mTimer(0),
 	mSystemName(NULL),
+	mGameName(NULL),
+	mGameIndex(-1)
 {
 	mWindow->setScreenSaver(this);
 }
@@ -234,6 +235,67 @@ void SystemScreenSaver::update(int deltaTime)
 		mVideoScreensaver->update(deltaTime);
 }
 
+const char* SystemScreenSaver::getSystemName()
 {
 	if (mSystemName)
 		return mSystemName;
+	else
+		return "";
+}
+
+const char* SystemScreenSaver::getGameName() 
+{
+	if (mGameName)
+		return mGameName;
+	else
+		return "";
+}
+
+int SystemScreenSaver::getGameIndex()
+{
+	return mGameIndex;
+}
+
+void SystemScreenSaver::writeSubtitle() 
+{
+	FILE* file = fopen(getTitlePath().c_str(), "w");	
+	fprintf(file, "1\n00:00:01,000 --> 00:00:08,000\n");
+	fprintf(file, "%s\n", getGameName());
+	fprintf(file, "<i>%s</i>\n\n", getSystemName());
+	fprintf(file, "2\n00:00:29,000 --> 00:00:35,000\n");
+	fprintf(file, "%s\n", getGameName());
+	fprintf(file, "<i>%s</i>\n", getSystemName());
+	fflush(file);
+	fclose(file);
+	file = NULL;
+}
+
+void SystemScreenSaver::input(InputConfig* config, Input input)
+{
+	LOG(LogDebug) << "Detected input while screensaver: " <<  input.string() << " Game Index: " << getGameIndex();
+	if(getGameIndex() >= 0 && (config->isMappedTo("right", input) || config->isMappedTo("start", input))) 
+	{
+		LOG(LogDebug) << "Detected right input while video screensaver";
+		if(config->isMappedTo("right", input)) 
+		{
+			LOG(LogDebug) << "Next video!";
+			// handle screensaver control, first stab
+			cancelScreenSaver();
+			startScreenSaver();
+		}
+		else if(config->isMappedTo("start", input)) 
+		{
+			// launch game!
+			LOG(LogDebug) << "Launch Game: " << getGameName() << " - System: " << getSystemName();
+
+			// get game info
+			
+
+			// wake up
+			mTimeSinceLastInput = 0;
+			cancelScreenSaver();
+			mSleeping = false;
+			onWake();
+		}
+	}
+}
