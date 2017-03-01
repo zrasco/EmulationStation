@@ -125,7 +125,7 @@ bool SystemView::input(InputConfig* config, Input input)
 		if(config->isMappedTo("select", input))
 		{			
 			LOG(LogDebug) << "Should be launching screensaver by virtue of Select";
-			mWindow->startScreenSaver();
+			//mWindow->startScreenSaver();
 			//mWindow->renderScreenSaver();
 			return false;
 		}

@@ -270,7 +270,7 @@ void SystemScreenSaver::writeSubtitle()
 	file = NULL;
 }
 
-void SystemScreenSaver::input(InputConfig* config, Input input)
+/*void SystemScreenSaver::input(InputConfig* config, Input input)
 {
 	LOG(LogDebug) << "Detected input while screensaver: " <<  input.string() << " Game Index: " << getGameIndex();
 	if(getGameIndex() >= 0 && (config->isMappedTo("right", input) || config->isMappedTo("start", input))) 
@@ -299,3 +299,4 @@ void SystemScreenSaver::input(InputConfig* config, Input input)
 		}
 	}
 }
+*/
