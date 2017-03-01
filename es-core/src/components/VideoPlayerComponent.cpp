@@ -9,15 +9,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-std::string getTitlePath() {
-	std::string home = getHomePath();
-	return home + "/.emulationstation/last_title.txt";
-}
-
-VideoPlayerComponent::VideoPlayerComponent(Window* window, bool useSubtitles) :
+VideoPlayerComponent::VideoPlayerComponent(Window* window, const char* subtitleFolder) :
 	VideoComponent(window),
 	mPlayerPid(-1),
-	subtitles(useSubtitles)
+	subtitles(subtitleFolder)
 {
 }
 
@@ -75,7 +70,7 @@ void VideoPlayerComponent::startVideo()
 				if (subtitles) 
 				{	
 					argv[7] = "--subtitles";
-					argv[8] = getTitlePath().c_str();
+					argv[8] = subtitles;
 					argv[9] = mPlayingVideoPath.c_str();
 					/*argv[10] = "--no-ghost-box";
 					argv[11] = "--align"; 

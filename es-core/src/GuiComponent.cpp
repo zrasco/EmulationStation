@@ -28,6 +28,9 @@ GuiComponent::~GuiComponent()
 
 bool GuiComponent::input(InputConfig* config, Input input)
 {
+	// pjft Debug
+	LOG(LogDebug) << "GuiComponent.cpp Input";
+
 	for(unsigned int i = 0; i < getChildCount(); i++)
 	{
 		if(getChild(i)->input(config, input))

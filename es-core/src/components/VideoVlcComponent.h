@@ -28,7 +28,7 @@ class VideoVlcComponent : public VideoComponent
 public:
 	static void setupVLC();
 
-	VideoVlcComponent(Window* window);
+	VideoVlcComponent(Window* window, const char* subtitles);
 	virtual ~VideoVlcComponent();
 
 	void render(const Eigen::Affine3f& parentTrans) override;
@@ -50,6 +50,7 @@ private:
 	libvlc_media_player_t*			mMediaPlayer;
 	VideoContext					mContext;
 	std::shared_ptr<TextureResource> mTexture;
+	const char*						mSubtitles;
 };
 
 #endif

@@ -29,9 +29,10 @@ static void display(void *data, void *id) {
     //Data to be displayed
 }
 
-VideoVlcComponent::VideoVlcComponent(Window* window) :
+VideoVlcComponent::VideoVlcComponent(Window* window, const char* subtitles) :
 	VideoComponent(window),
-	mMediaPlayer(nullptr)
+	mMediaPlayer(nullptr),
+	mSubtitles(subtitles)
 {
 	memset(&mContext, 0, sizeof(mContext));
 
@@ -217,7 +218,13 @@ void VideoVlcComponent::startVideo()
 					setupContext();
 
 					// Setup the media player
-					mMediaPlayer = libvlc_media_player_new_from_media(mMedia);
+					mMediaPlayer = libvlc_media_player_new_from_media(mMedia);					
+
+					// add subtitles test
+					libvlc_media_slaves_clear(mMediaPlayer);
+					if(mSubtitles)
+						libvlc_media_slaves_add(mMediaPlayer, libvlc_media_slave_type_subtitle, 2, mSubtitles);
+
 					libvlc_media_player_play(mMediaPlayer);
 					libvlc_video_set_callbacks(mMediaPlayer, lock, unlock, display, (void*)&mContext);
 					libvlc_video_set_format(mMediaPlayer, "RGBA", (int)mVideoWidth, (int)mVideoHeight, (int)mVideoWidth * 4);

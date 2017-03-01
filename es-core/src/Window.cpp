@@ -116,6 +116,9 @@ void Window::textInput(const char* text)
 
 void Window::input(InputConfig* config, Input input)
 {
+	// pjft Debug
+	LOG(LogDebug) << "Window.cpp Input";
+	
 	if(mSleeping)
 	{
 		// wake up

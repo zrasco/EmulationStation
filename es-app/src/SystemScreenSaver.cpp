@@ -14,6 +14,16 @@
 #define FADE_TIME 			3000
 #define SWAP_VIDEO_TIMEOUT	35000
 
+std::string getTitlePath() {
+	std::string titleFolder = getTitleFolder();
+	return titleFolder + "last_title.srt";
+}
+
+std::string getTitleFolder() {
+	std::string home = getHomePath();
+	return home + "/.emulationstation/tmp/";
+}
+
 SystemScreenSaver::SystemScreenSaver(Window* window) :
 	mVideoScreensaver(NULL),
 	mWindow(window),
@@ -27,6 +37,9 @@ SystemScreenSaver::SystemScreenSaver(Window* window) :
 	mGameIndex(-1)
 {
 	mWindow->setScreenSaver(this);
+	std::string path = getTitleFolder();
+	if(!boost::filesystem::exists(path))
+		boost::filesystem::create_directory(path);
 }
 
 SystemScreenSaver::~SystemScreenSaver()
@@ -52,17 +65,30 @@ void SystemScreenSaver::startScreenSaver()
 		// Load a random video
 		std::string path;
 		pickRandomVideo(path);
+
+		// fix to check whether video file actually exists
+		if(path.empty() || !boost::filesystem::exists(path)) {
+			// try again
+
+			int retry = 20;
+			while(retry > 0 && (path.empty() || !boost::filesystem::exists(path)))
+			{
+				retry--;
+				pickRandomVideo(path);
+			}
+		}
+
 		LOG(LogDebug) << "Starting Video at path \"" << path << "\"";
-		if (!path.empty())
+		if (!path.empty() && boost::filesystem::exists(path))
 		{
 		// Create the correct type of video component
 #ifdef _RPI_
 			if (Settings::getInstance()->getBool("VideoOmxPlayer"))
-				mVideoScreensaver = new VideoPlayerComponent(mWindow, true);
+				mVideoScreensaver = new VideoPlayerComponent(mWindow, getTitlePath().c_str());
 			else
-				mVideoScreensaver = new VideoVlcComponent(mWindow);
+				mVideoScreensaver = new VideoVlcComponent(mWindow, getTitlePath().c_str());
 #else
-			mVideoScreensaver = new VideoVlcComponent(mWindow);
+			mVideoScreensaver = new VideoVlcComponent(mWindow, getTitlePath().c_str());
 #endif
 
 
@@ -75,7 +101,7 @@ void SystemScreenSaver::startScreenSaver()
 		}
 		else
 		{
-			LOG(LogError) << "Path is empty! Path: \"" << path << "\"";
+			LOG(LogError) << "Path is empty or dowsn't exist! Path: \"" << path << "\"";
 			// No videos. Just use a standard screensaver
 			mState = STATE_SCREENSAVER_ACTIVE;
 		}

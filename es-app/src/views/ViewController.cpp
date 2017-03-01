@@ -284,6 +284,9 @@ std::shared_ptr<SystemView> ViewController::getSystemListView()
 
 bool ViewController::input(InputConfig* config, Input input)
 {
+	// pjft Debug
+	LOG(LogDebug) << "ViewController.cpp Input";
+
 	if(mLockInput)
 		return true;
 

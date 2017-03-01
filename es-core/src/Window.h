@@ -48,15 +48,19 @@ public:
 	
 	void setScreenSaver(ScreenSaver* screenSaver) { mScreenSaver = screenSaver; }
 
+	void startScreenSaver();
+	void cancelScreenSaver();
+	void renderScreenSaver();
+
 private:
 	void onSleep();
 	void onWake();
 
 	// Returns true if at least one component on the stack is processing
 	bool isProcessing();
-	void renderScreenSaver();
-	void startScreenSaver();
-	void cancelScreenSaver();
+	//void renderScreenSaver();
+	//void startScreenSaver();
+	//void cancelScreenSaver();
  
 	HelpComponent* mHelp;
 	ImageComponent* mBackgroundOverlay;
