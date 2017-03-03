@@ -5,6 +5,7 @@
 #ifdef WIN32
 #include <codecvt>
 #endif
+#include "Log.h"
 
 libvlc_instance_t*		VideoVlcComponent::mVLC = NULL;
 
@@ -29,18 +30,19 @@ static void display(void *data, void *id) {
     //Data to be displayed
 }
 
-VideoVlcComponent::VideoVlcComponent(Window* window, const char* subtitles) :
+VideoVlcComponent::VideoVlcComponent(Window* window, std::string subtitles) :
 	VideoComponent(window),
-	mMediaPlayer(nullptr),
-	mSubtitles(subtitles)
+	mMediaPlayer(nullptr)
 {
 	memset(&mContext, 0, sizeof(mContext));
 
 	// Get an empty texture for rendering the video
 	mTexture = TextureResource::get("");
 
+	LOG(LogDebug) << "Initializing VLC Player with Subtitles at: " << subtitles;
+
 	// Make sure VLC has been initialised
-	setupVLC();
+	setupVLC(subtitles);
 }
 
 VideoVlcComponent::~VideoVlcComponent()
@@ -150,12 +152,17 @@ void VideoVlcComponent::freeContext()
 	}
 }
 
-void VideoVlcComponent::setupVLC()
+void VideoVlcComponent::setupVLC(std::string subtitles)
 {
 	// If VLC hasn't been initialised yet then do it now
 	if (!mVLC)
 	{
-		const char* args[] = { "--quiet" };
+		const char* args[] = { "--quiet", "", "" };		
+		if (!subtitles.empty()) 
+		{			
+			args[1] = "--sub-file";
+			args[2] = subtitles.c_str();			
+		}		
 		mVLC = libvlc_new(sizeof(args) / sizeof(args[0]), args);
 	}
 }
@@ -215,16 +222,21 @@ void VideoVlcComponent::startVideo()
 				// Make sure we found a valid video track
 				if ((mVideoWidth > 0) && (mVideoHeight > 0))
 				{
+					if (mScreensaverMode) 
+					{
+						mVideoWidth = (unsigned)Renderer::getScreenWidth();
+						mVideoHeight = (unsigned)Renderer::getScreenHeight();
+					}
 					setupContext();
 
 					// Setup the media player
 					mMediaPlayer = libvlc_media_player_new_from_media(mMedia);					
 
 					// add subtitles test
-					libvlc_media_slaves_clear(mMediaPlayer);
+					/*libvlc_media_slaves_clear(mMediaPlayer);
 					if(mSubtitles)
 						libvlc_media_slaves_add(mMediaPlayer, libvlc_media_slave_type_subtitle, 2, mSubtitles);
-
+					*/
 					libvlc_media_player_play(mMediaPlayer);
 					libvlc_video_set_callbacks(mMediaPlayer, lock, unlock, display, (void*)&mContext);
 					libvlc_video_set_format(mMediaPlayer, "RGBA", (int)mVideoWidth, (int)mVideoHeight, (int)mVideoWidth * 4);

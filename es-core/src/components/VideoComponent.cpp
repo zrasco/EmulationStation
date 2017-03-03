@@ -8,6 +8,35 @@
 
 #define FADE_TIME_MS	200
 
+std::string getTitlePath() {
+	std::string titleFolder = getTitleFolder();
+	return titleFolder + "last_title.srt";
+}
+
+std::string getTitleFolder() {
+	std::string home = getHomePath();
+	return home + "/.emulationstation/tmp/";
+}
+
+void writeSubtitle(const char* gameName, const char* systemName) 
+{
+	FILE* file = fopen(getTitlePath().c_str(), "w");	
+	fprintf(file, "1\n00:00:01,000 --> 00:00:08,000\n");
+	fprintf(file, "%s\n", gameName);
+	fprintf(file, "<i>%s</i>\n\n", systemName);
+	fprintf(file, "2\n00:00:29,000 --> 00:00:35,000\n");
+	fprintf(file, "%s\n", gameName);
+	fprintf(file, "<i>%s</i>\n", systemName);
+	fflush(file);
+	fclose(file);
+	file = NULL;
+}
+
+void VideoComponent::setScreensaverMode(bool isScreensaver)
+{
+	mScreensaverMode = isScreensaver;
+}
+
 VideoComponent::VideoComponent(Window* window) :
 	GuiComponent(window),
 	mStaticImage(window),
@@ -17,18 +46,25 @@ VideoComponent::VideoComponent(Window* window) :
 	mIsPlaying(false),
 	mShowing(false),
 	mScreensaverActive(false),
-	mDisable(false)
+	mDisable(false),
+	mScreensaverMode(false)
 {
 	// Setup the default configuration
 	mConfig.showSnapshotDelay 		= false;
 	mConfig.showSnapshotNoVideo		= false;
 	mConfig.startDelay				= 0;
+
+	std::string path = getTitleFolder();
+	if(!boost::filesystem::exists(path))
+		boost::filesystem::create_directory(path);
 }
 
 VideoComponent::~VideoComponent()
 {
 	// Stop any currently running video
 	stopVideo();
+	// Delete subtitle file, if existing
+	remove(getTitlePath().c_str());
 }
 
 void VideoComponent::setOrigin(float originX, float originY)

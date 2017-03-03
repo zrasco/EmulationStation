@@ -29,11 +29,11 @@ VideoGameListView::VideoGameListView(Window* window, FileData* root) :
 	// Create the correct type of video window
 #ifdef _RPI_
 	if (Settings::getInstance()->getBool("VideoOmxPlayer"))
-		mVideo = new VideoPlayerComponent(window, NULL);
+		mVideo = new VideoPlayerComponent(window, "");
 	else
-		mVideo = new VideoVlcComponent(window, NULL);
+		mVideo = new VideoVlcComponent(window, getTitlePath());
 #else
-	mVideo = new VideoVlcComponent(window, NULL);
+	mVideo = new VideoVlcComponent(window, getTitlePath());
 #endif
 
 	mList.setPosition(mSize.x() * (0.50f + padding), mList.getPosition().y());

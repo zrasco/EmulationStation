@@ -14,16 +14,6 @@
 #define FADE_TIME 			3000
 #define SWAP_VIDEO_TIMEOUT	35000
 
-std::string getTitlePath() {
-	std::string titleFolder = getTitleFolder();
-	return titleFolder + "last_title.srt";
-}
-
-std::string getTitleFolder() {
-	std::string home = getHomePath();
-	return home + "/.emulationstation/tmp/";
-}
-
 SystemScreenSaver::SystemScreenSaver(Window* window) :
 	mVideoScreensaver(NULL),
 	mWindow(window),
@@ -83,12 +73,14 @@ void SystemScreenSaver::startScreenSaver()
 		{
 		// Create the correct type of video component
 #ifdef _RPI_
-			if (Settings::getInstance()->getBool("VideoOmxPlayer"))
-				mVideoScreensaver = new VideoPlayerComponent(mWindow, getTitlePath().c_str());
-			else
-				mVideoScreensaver = new VideoVlcComponent(mWindow, getTitlePath().c_str());
+			// commenting out as we're defaulting to OMXPlayer for screensaver on the Pi
+			// better resolution, and no overlays on screensavers at the moment
+			//if (Settings::getInstance()->getBool("VideoOmxPlayer"))
+			mVideoScreensaver = new VideoPlayerComponent(mWindow, getTitlePath());
+			//else
+			//	mVideoScreensaver = new VideoVlcComponent(mWindow, getTitlePath());
 #else
-			mVideoScreensaver = new VideoVlcComponent(mWindow, getTitlePath().c_str());
+			mVideoScreensaver = new VideoVlcComponent(mWindow, getTitlePath());
 #endif
 
 
@@ -96,12 +88,13 @@ void SystemScreenSaver::startScreenSaver()
 			mVideoScreensaver->setPosition(0.0f, 0.0f);
 			mVideoScreensaver->setSize((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
 			mVideoScreensaver->setVideo(path);
+			mVideoScreensaver->setScreensaverMode(true);
 			mVideoScreensaver->onShow();
 			mTimer = 0;
 		}
 		else
 		{
-			LOG(LogError) << "Path is empty or dowsn't exist! Path: \"" << path << "\"";
+			LOG(LogError) << "Path is empty or doesn't exist! Path: \"" << path << "\"";
 			// No videos. Just use a standard screensaver
 			mState = STATE_SCREENSAVER_ACTIVE;
 		}
@@ -118,8 +111,11 @@ void SystemScreenSaver::stopScreenSaver()
 void SystemScreenSaver::renderScreenSaver()
 {
 	float lOpacity = mOpacity;
-	if (Settings::getInstance()->getBool("VideoOmxPlayer"))
-		lOpacity = 1.0f;
+	#ifdef _RPI_
+	// commenting out as we're defaulting to OMXPlayer for screensaver on the Pi
+	//if (Settings::getInstance()->getBool("VideoOmxPlayer"))
+	lOpacity = 1.0f;
+	#endif
 	if (mVideoScreensaver)
 	{
 		// Only render the video if the state requires it
@@ -209,7 +205,7 @@ void SystemScreenSaver::pickRandomVideo(std::string& path)
 							mSystemName = (*it)->getFullName().c_str();
 							mGameName = fileNode.child("name").text().get();
 							mGameIndex = gameIndex;
-							writeSubtitle();
+							writeSubtitle(mSystemName, mGameName);
 							return;
 						}
 					}
@@ -280,20 +276,6 @@ const char* SystemScreenSaver::getGameName()
 int SystemScreenSaver::getGameIndex()
 {
 	return mGameIndex;
-}
-
-void SystemScreenSaver::writeSubtitle() 
-{
-	FILE* file = fopen(getTitlePath().c_str(), "w");	
-	fprintf(file, "1\n00:00:01,000 --> 00:00:08,000\n");
-	fprintf(file, "%s\n", getGameName());
-	fprintf(file, "<i>%s</i>\n\n", getSystemName());
-	fprintf(file, "2\n00:00:29,000 --> 00:00:35,000\n");
-	fprintf(file, "%s\n", getGameName());
-	fprintf(file, "<i>%s</i>\n", getSystemName());
-	fflush(file);
-	fclose(file);
-	file = NULL;
 }
 
 /*void SystemScreenSaver::input(InputConfig* config, Input input)

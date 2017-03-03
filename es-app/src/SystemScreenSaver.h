@@ -4,9 +4,6 @@
 
 class VideoComponent;
 
-std::string	getTitlePath();
-std::string	getTitleFolder();
-
 // Screensaver implementation for main window
 class SystemScreenSaver : public Window::ScreenSaver
 {
@@ -23,7 +20,6 @@ public:
 private:
 	void	countVideos();
 	void	pickRandomVideo(std::string& path);
-    void	writeSubtitle();
 
     // WIP
 

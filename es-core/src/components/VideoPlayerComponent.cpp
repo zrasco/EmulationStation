@@ -8,12 +8,15 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include "Log.h"
 
-VideoPlayerComponent::VideoPlayerComponent(Window* window, const char* subtitleFolder) :
+VideoPlayerComponent::VideoPlayerComponent(Window* window, std::string subtitlePath) :
 	VideoComponent(window),
 	mPlayerPid(-1),
-	subtitles(subtitleFolder)
+	subtitles(subtitlePath)
 {
+	LOG(LogDebug) << "Initializing Player with Subtitles at: " <<  subtitlePath;
+	LOG(LogDebug) << " - Local var: " << subtitles;
 }
 
 VideoPlayerComponent::~VideoPlayerComponent()
@@ -65,28 +68,21 @@ void VideoPlayerComponent::startVideo()
 				sprintf(buf, "%d,%d,%d,%d", (int)x, (int)y, (int)(x + mSize.x()), (int)(y + mSize.y()));
 				// We need to specify the layer of 10000 or above to ensure the video is displayed on top
 				// of our SDL display
-				const char* argv[] = { "", "--layer", "10010", "--loop", "--no-osd", "--aspect-mode", "letterbox", "--win", buf, "-b", "", "", "", "", "","", NULL };
+				const char* argv[] = { "", "--layer", "10010", "--loop", "--no-osd", "--aspect-mode", "letterbox", "--win", buf, "-b", "", NULL };
 				
-				if (subtitles) 
+				LOG(LogDebug) << "Subtitles: " << subtitles;
+
+				if (!subtitles.empty()) 
 				{	
+					LOG(LogDebug) << "We have Subs! Setting subtitles: " << subtitles;
 					argv[7] = "--subtitles";
-					argv[8] = subtitles;
-					argv[9] = mPlayingVideoPath.c_str();
-					/*argv[10] = "--no-ghost-box";
-					argv[11] = "--align"; 
-					argv[12] = "center";*/
-					argv[15] = "";
-					
-				} 
-				else 
-				{
-					argv[9] = mPlayingVideoPath.c_str();
-				}
+					argv[8] = subtitles.c_str();
+				} 				
 				
 				//const char* argv[] = args;
 				const char* env[] = { "LD_LIBRARY_PATH=/opt/vc/libs:/usr/lib/omxplayer", NULL };
 				// Fill in the empty argument with the video path
-				//argv[10] = mPlayingVideoPath.c_str();
+				argv[9] = mPlayingVideoPath.c_str();
 				
 				// Redirect stdout
 				int fdin = open("/dev/null", O_RDONLY);

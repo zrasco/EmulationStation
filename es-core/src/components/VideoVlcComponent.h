@@ -6,6 +6,7 @@
 
 #include "VideoComponent.h"
 #include <vlc/vlc.h>
+#include <vlc/libvlc_media.h>
 #include "resources/TextureResource.h"
 
 struct VideoContext {
@@ -26,9 +27,9 @@ class VideoVlcComponent : public VideoComponent
 	};
 
 public:
-	static void setupVLC();
+	static void setupVLC(std::string subtitles);
 
-	VideoVlcComponent(Window* window, const char* subtitles);
+	VideoVlcComponent(Window* window, std::string subtitles);
 	virtual ~VideoVlcComponent();
 
 	void render(const Eigen::Affine3f& parentTrans) override;
@@ -50,7 +51,6 @@ private:
 	libvlc_media_player_t*			mMediaPlayer;
 	VideoContext					mContext;
 	std::shared_ptr<TextureResource> mTexture;
-	const char*						mSubtitles;
 };
 
 #endif
