@@ -18,6 +18,10 @@ public:
 		virtual void renderScreenSaver() = 0;		
 		virtual bool allowSleep() = 0;		
 		virtual void update(int deltaTime) = 0;		
+		virtual bool isScreenSaverActive() = 0;
+		virtual std::string getSystemName() = 0;
+		virtual std::string getGameName() = 0;
+		virtual int getGameIndex() = 0;
 	};
  
 	Window();

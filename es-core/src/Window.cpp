@@ -117,8 +117,47 @@ void Window::textInput(const char* text)
 void Window::input(InputConfig* config, Input input)
 {
 	// pjft Debug
-	LOG(LogDebug) << "Window.cpp Input";
+	LOG(LogDebug) << "Window.cpp Input. Am I sleeping? " << (mSleeping ? "True" : "False");
+	if (mScreenSaver) {
+		LOG(LogDebug) << "Window.cpp Input. ScreenSaver active? " << (mScreenSaver->isScreenSaverActive() ? "True" : "False");
+		if(mScreenSaver->isScreenSaverActive()) 
+		{
+			if(mScreenSaver->getGameIndex() >= 0 && (config->isMappedTo("right", input) || config->isMappedTo("start", input))) 
+			{
+				if(config->isMappedTo("right", input)) 
+				{
+					LOG(LogDebug) << "Detected right input while video screensaver";
+					if (input.value != 0) {
+						LOG(LogDebug) << "Next video!";
+						// handle screensaver control, first stab
+						cancelScreenSaver();
+						startScreenSaver();
+					}
+					return;
+				}
+				else if(config->isMappedTo("start", input)) 
+				{
+					LOG(LogDebug) << "Detected Start while video screensaver";
+					// launch game!
+					LOG(LogDebug) << "Launch Game: " << mScreenSaver->getGameIndex();
+					//LOG(LogDebug) << "- System: " << mScreenSaver->getSystemName();
+
+					// get game info
+					
+
+					// wake up
+					mTimeSinceLastInput = 0;
+					cancelScreenSaver();
+					mSleeping = false;
+					onWake();
+				}
+			}
+		}
+	}
+		
 	
+
+
 	if(mSleeping)
 	{
 		// wake up

@@ -16,16 +16,18 @@ public:
 	virtual void renderScreenSaver();
 	virtual bool allowSleep();
 	virtual void update(int deltaTime);
+	virtual bool isScreenSaverActive();
+
+// WIP
+
+    virtual std::string getSystemName();
+	virtual std::string getGameName();
+	virtual int getGameIndex();
 
 private:
 	void	countVideos();
 	void	pickRandomVideo(std::string& path);
 
-    // WIP
-
-    virtual const char* getSystemName();
-	virtual const char* getGameName();
-	virtual int getGameIndex();
 	void input(InputConfig* config, Input input);
 
 	enum STATE {
@@ -44,6 +46,6 @@ private:
 	float			mOpacity;
 	int				mTimer;
 	int   			mGameIndex;
-	const char*		mGameName;
-	const char*		mSystemName;	
+	std::string		mGameName;
+	std::string		mSystemName;	
 };

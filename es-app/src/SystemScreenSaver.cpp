@@ -22,8 +22,8 @@ SystemScreenSaver::SystemScreenSaver(Window* window) :
 	mState(STATE_INACTIVE),
 	mOpacity(0.0f),
 	mTimer(0),
-	mSystemName(NULL),
-	mGameName(NULL),
+	mSystemName(""),
+	mGameName(""),
 	mGameIndex(-1)
 {
 	mWindow->setScreenSaver(this);
@@ -42,6 +42,11 @@ SystemScreenSaver::~SystemScreenSaver()
 bool SystemScreenSaver::allowSleep()
 {
 	return false;
+}
+
+bool SystemScreenSaver::isScreenSaverActive() 
+{
+	return (mState != STATE_INACTIVE);
 }
 
 void SystemScreenSaver::startScreenSaver()
@@ -114,7 +119,8 @@ void SystemScreenSaver::renderScreenSaver()
 	#ifdef _RPI_
 	// commenting out as we're defaulting to OMXPlayer for screensaver on the Pi
 	//if (Settings::getInstance()->getBool("VideoOmxPlayer"))
-	lOpacity = 1.0f;
+	if (Settings::getInstance()->getString("ScreenSaverBehavior") == "random video")
+		lOpacity = 1.0f;
 	#endif
 	if (mVideoScreensaver)
 	{
@@ -202,10 +208,13 @@ void SystemScreenSaver::pickRandomVideo(std::string& path)
 						{
 							// Yes. Resolve to a full path
 							path = resolvePath(videoNode.text().get(), (*it)->getStartPath(), true).generic_string();	
-							mSystemName = (*it)->getFullName().c_str();
+							mSystemName = (*it)->getFullName();
+							LOG(LogDebug) << "Setting System Name: " << mSystemName;
 							mGameName = fileNode.child("name").text().get();
+							LOG(LogDebug) << "Setting Game Name: " << mGameName;
 							mGameIndex = gameIndex;
-							writeSubtitle(mSystemName, mGameName);
+							LOG(LogDebug) << "Setting Game Index: " << mGameIndex;
+							writeSubtitle(mSystemName.c_str(), mGameName.c_str());
 							return;
 						}
 					}
@@ -257,20 +266,19 @@ void SystemScreenSaver::update(int deltaTime)
 		mVideoScreensaver->update(deltaTime);
 }
 
-const char* SystemScreenSaver::getSystemName()
+std::string SystemScreenSaver::getSystemName()
 {
-	if (mSystemName)
-		return mSystemName;
-	else
-		return "";
+	LOG(LogDebug) << "Getting System Name";
+	LOG(LogDebug) << "System Name: " << mSystemName;
+	return mSystemName;
 }
 
-const char* SystemScreenSaver::getGameName() 
+std::string SystemScreenSaver::getGameName() 
 {
-	if (mGameName)
-		return mGameName;
-	else
-		return "";
+
+	LOG(LogDebug) << "Getting Game Name";
+	LOG(LogDebug) << "Game Name: " << mGameName;
+	return mGameName;
 }
 
 int SystemScreenSaver::getGameIndex()
