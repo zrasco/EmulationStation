@@ -5,6 +5,7 @@
 #include "resources/Font.h"
 #include "InputManager.h"
 
+class FileData;
 class HelpComponent;
 class ImageComponent;
 
@@ -21,7 +22,8 @@ public:
 		virtual bool isScreenSaverActive() = 0;
 		virtual std::string getSystemName() = 0;
 		virtual std::string getGameName() = 0;
-		virtual int getGameIndex() = 0;
+		virtual FileData* getCurrentGame() = 0;
+		virtual void launchGame() = 0;
 	};
  
 	Window();

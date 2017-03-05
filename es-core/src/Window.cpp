@@ -122,7 +122,7 @@ void Window::input(InputConfig* config, Input input)
 		LOG(LogDebug) << "Window.cpp Input. ScreenSaver active? " << (mScreenSaver->isScreenSaverActive() ? "True" : "False");
 		if(mScreenSaver->isScreenSaverActive()) 
 		{
-			if(mScreenSaver->getGameIndex() >= 0 && (config->isMappedTo("right", input) || config->isMappedTo("start", input))) 
+			if(mScreenSaver->getCurrentGame() != NULL && (config->isMappedTo("right", input) || config->isMappedTo("start", input))) 
 			{
 				if(config->isMappedTo("right", input)) 
 				{
@@ -139,7 +139,7 @@ void Window::input(InputConfig* config, Input input)
 				{
 					LOG(LogDebug) << "Detected Start while video screensaver";
 					// launch game!
-					LOG(LogDebug) << "Launch Game: " << mScreenSaver->getGameIndex();
+					mScreenSaver->launchGame();
 					//LOG(LogDebug) << "- System: " << mScreenSaver->getSystemName();
 
 					// get game info

@@ -22,7 +22,8 @@ public:
 
     virtual std::string getSystemName();
 	virtual std::string getGameName();
-	virtual int getGameIndex();
+	virtual FileData* getCurrentGame();
+	virtual void launchGame();
 
 private:
 	void	countVideos();
@@ -45,7 +46,7 @@ private:
 	STATE			mState;
 	float			mOpacity;
 	int				mTimer;
-	int   			mGameIndex;
+	FileData*		mCurrentGame;
 	std::string		mGameName;
 	std::string		mSystemName;	
 };
