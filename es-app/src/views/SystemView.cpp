@@ -92,9 +92,6 @@ void SystemView::goToSystem(SystemData* system, bool animate)
 
 bool SystemView::input(InputConfig* config, Input input)
 {
-	// pjft Debug
-	LOG(LogDebug) << "SystemView.cpp Input";
-
 	if(input.value != 0)
 	{
 		if(config->getDeviceId() == DEVICE_KEYBOARD && input.value && input.id == SDLK_r && SDL_GetModState() & KMOD_LCTRL && Settings::getInstance()->getBool("Debug"))
@@ -128,7 +125,7 @@ bool SystemView::input(InputConfig* config, Input input)
 	}else{
 		if(config->isMappedTo("left", input) || config->isMappedTo("right", input))
 			listInput(0);
-		if(config->isMappedTo("select", input))
+		if(config->isMappedTo("select", input) && Settings::getInstance()->getBool("ScreenSaverControls"))
 		{						
 			mWindow->startScreenSaver();
 			mWindow->renderScreenSaver();

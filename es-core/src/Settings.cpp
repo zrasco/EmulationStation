@@ -77,11 +77,9 @@ void Settings::setDefaults()
 
 	// This setting only applies to raspberry pi but set it for all platforms so
 	// we don't get a warning if we encounter it on a different platform
-#ifdef _RPI_
-	mBoolMap["VideoOmxPlayer"] = true;
-#else
 	mBoolMap["VideoOmxPlayer"] = false;
-#endif
+	mBoolMap["LaunchOnStart"] = true;
+	mBoolMap["ScreenSaverControls"] = true;
 }
 
 template <typename K, typename V>

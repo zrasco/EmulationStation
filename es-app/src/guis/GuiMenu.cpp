@@ -161,6 +161,26 @@ GuiMenu::GuiMenu(Window* window) : GuiComponent(window), mMenu(window, "MAIN MEN
 				});
 			}
 
+			// Video Player - VideoOmxPlayer
+			auto omx_player = std::make_shared<SwitchComponent>(mWindow);
+			omx_player->setState(Settings::getInstance()->getBool("VideoOmxPlayer"));
+			s->addWithLabel("USE EXPERIMENTAL OMX VIDEO PLAYER", omx_player);
+			s->addSaveFunc([omx_player] { Settings::getInstance()->setBool("VideoOmxPlayer", omx_player->getState()); });
+
+			// Allow ScreenSaver Controls - ScreenSaverControls
+			auto ss_controls = std::make_shared<SwitchComponent>(mWindow);
+			ss_controls->setState(Settings::getInstance()->getBool("ScreenSaverControls"));
+			s->addWithLabel("SCREENSAVER CONTROLS", ss_controls);
+			s->addSaveFunc([ss_controls] { Settings::getInstance()->setBool("ScreenSaverControls", ss_controls->getState()); });
+
+
+			// Launch Game on Start from ScreenSaver - LaunchOnStart
+			auto launch_on_start = std::make_shared<SwitchComponent>(mWindow);
+			launch_on_start->setState(Settings::getInstance()->getBool("LaunchOnStart"));
+			s->addWithLabel("LAUNCH GAME FROM VIDEO SCREENSAVER", launch_on_start);
+			s->addSaveFunc([launch_on_start] { Settings::getInstance()->setBool("LaunchOnStart", launch_on_start->getState()); });
+
+
 			mWindow->pushGui(s);
 	});
 

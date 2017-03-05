@@ -116,20 +116,15 @@ void Window::textInput(const char* text)
 
 void Window::input(InputConfig* config, Input input)
 {
-	// pjft Debug
-	LOG(LogDebug) << "Window.cpp Input. Am I sleeping? " << (mSleeping ? "True" : "False");
 	if (mScreenSaver) {
-		LOG(LogDebug) << "Window.cpp Input. ScreenSaver active? " << (mScreenSaver->isScreenSaverActive() ? "True" : "False");
-		if(mScreenSaver->isScreenSaverActive()) 
+		if(mScreenSaver->isScreenSaverActive() && Settings::getInstance()->getBool("ScreenSaverControls")) 
 		{
-			if(mScreenSaver->getCurrentGame() != NULL && (config->isMappedTo("right", input) || config->isMappedTo("start", input))) 
+			if(mScreenSaver->getCurrentGame() != NULL && (config->isMappedTo("right", input) || config->isMappedTo("start", input) || config->isMappedTo("select", input))) 
 			{
-				if(config->isMappedTo("right", input)) 
+				if(config->isMappedTo("right", input) || config->isMappedTo("select", input)) 
 				{
-					LOG(LogDebug) << "Detected right input while video screensaver";
 					if (input.value != 0) {
-						LOG(LogDebug) << "Next video!";
-						// handle screensaver control, first stab
+						// handle screensaver control
 						cancelScreenSaver();
 						startScreenSaver();
 					}
@@ -137,26 +132,19 @@ void Window::input(InputConfig* config, Input input)
 				}
 				else if(config->isMappedTo("start", input)) 
 				{
-					LOG(LogDebug) << "Detected Start while video screensaver";
 					// launch game!
+					cancelScreenSaver();
 					mScreenSaver->launchGame();
-					//LOG(LogDebug) << "- System: " << mScreenSaver->getSystemName();
-
-					// get game info
-					
-
+				
 					// wake up
 					mTimeSinceLastInput = 0;
-					cancelScreenSaver();
 					mSleeping = false;
 					onWake();
+					return;
 				}
 			}
 		}
 	}
-		
-	
-
 
 	if(mSleeping)
 	{

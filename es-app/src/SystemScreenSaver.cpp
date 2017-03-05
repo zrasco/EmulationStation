@@ -329,14 +329,13 @@ FileData* SystemScreenSaver::getCurrentGame()
 	return mCurrentGame;
 }
 
-void SystemScreenSaver::launchGame() {
-
-	bool launchOnStart = true;
+void SystemScreenSaver::launchGame()
+{
 	// launching Game
 	ViewController::get()->goToGameList(mCurrentGame->getSystem());
 	IGameListView* view = ViewController::get()->getGameListView(mCurrentGame->getSystem()).get();
  	view->setCursor(mCurrentGame);
- 	if (launchOnStart) 
+ 	if (Settings::getInstance()->getBool("LaunchOnStart")) 
  	{
  		ViewController::get()->launch(mCurrentGame);
  	}
