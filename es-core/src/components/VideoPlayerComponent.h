@@ -10,7 +10,7 @@
 class VideoPlayerComponent : public VideoComponent
 {
 public:
-	VideoPlayerComponent(Window* window, std::string subtitlePath);
+	VideoPlayerComponent(Window* window, std::string path);
 	virtual ~VideoPlayerComponent();
 
 	void render(const Eigen::Affine3f& parentTrans) override;
@@ -23,7 +23,7 @@ private:
 
 private:
 	pid_t							mPlayerPid;
-	std::string						subtitles;
+	std::string						subtitlePath;
 };
 
 #endif

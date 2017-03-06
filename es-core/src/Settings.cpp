@@ -80,6 +80,7 @@ void Settings::setDefaults()
 	mBoolMap["VideoOmxPlayer"] = false;
 	mBoolMap["LaunchOnStart"] = true;
 	mBoolMap["ScreenSaverControls"] = true;
+	mBoolMap["ScreenSaverGameName"] = true;
 }
 
 template <typename K, typename V>

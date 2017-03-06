@@ -5,7 +5,6 @@
 #ifdef WIN32
 #include <codecvt>
 #endif
-#include "Log.h"
 
 libvlc_instance_t*		VideoVlcComponent::mVLC = NULL;
 
@@ -38,8 +37,6 @@ VideoVlcComponent::VideoVlcComponent(Window* window, std::string subtitles) :
 
 	// Get an empty texture for rendering the video
 	mTexture = TextureResource::get("");
-
-	LOG(LogDebug) << "Initializing VLC Player with Subtitles at: " << subtitles;
 
 	// Make sure VLC has been initialised
 	setupVLC(subtitles);
@@ -232,11 +229,6 @@ void VideoVlcComponent::startVideo()
 					// Setup the media player
 					mMediaPlayer = libvlc_media_player_new_from_media(mMedia);					
 
-					// add subtitles test
-					/*libvlc_media_slaves_clear(mMediaPlayer);
-					if(mSubtitles)
-						libvlc_media_slaves_add(mMediaPlayer, libvlc_media_slave_type_subtitle, 2, mSubtitles);
-					*/
 					libvlc_media_player_play(mMediaPlayer);
 					libvlc_video_set_callbacks(mMediaPlayer, lock, unlock, display, (void*)&mContext);
 					libvlc_video_set_format(mMediaPlayer, "RGBA", (int)mVideoWidth, (int)mVideoHeight, (int)mVideoWidth * 4);

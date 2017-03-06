@@ -70,7 +70,7 @@ void SystemScreenSaver::startScreenSaver()
 			// try again
 
 			int retry = 20;
-			while(retry > 0 && (path.empty() || !boost::filesystem::exists(path)))
+			while(retry > 0 && (path.empty() || !boost::filesystem::exists(path)) || mCurrentGame == NULL)
 			{
 				retry--;
 				pickRandomVideo(path);
@@ -180,6 +180,7 @@ void SystemScreenSaver::countVideos()
 void SystemScreenSaver::pickRandomVideo(std::string& path)
 {
 	countVideos();
+	mCurrentGame = NULL;
 	if (mVideoCount > 0)
 	{
 		srand((unsigned int)time(NULL));
@@ -252,13 +253,14 @@ void SystemScreenSaver::pickRandomVideo(std::string& path)
 									{
 										mCurrentGame = (*itf);
 										LOG(LogDebug) << "Found FileData in iteration! " << mCurrentGame->getName();
+										break;
 									}
 								}
 							}
 
 							// end of getting FileData
-
-							writeSubtitle(mSystemName.c_str(), mGameName.c_str());
+							if (Settings::getInstance()->getBool("ScreenSaverGameName"))
+								writeSubtitle(mGameName.c_str(), mSystemName.c_str());
 							return;
 						}
 					}

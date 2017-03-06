@@ -8,15 +8,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include "Log.h"
 
-VideoPlayerComponent::VideoPlayerComponent(Window* window, std::string subtitlePath) :
+VideoPlayerComponent::VideoPlayerComponent(Window* window, std::string path) :
 	VideoComponent(window),
 	mPlayerPid(-1),
-	subtitles(subtitlePath)
+	subtitlePath(path)
 {
-	LOG(LogDebug) << "Initializing Player with Subtitles at: " <<  subtitlePath;
-	LOG(LogDebug) << " - Local var: " << subtitles;
 }
 
 VideoPlayerComponent::~VideoPlayerComponent()
@@ -69,20 +66,33 @@ void VideoPlayerComponent::startVideo()
 				// We need to specify the layer of 10000 or above to ensure the video is displayed on top
 				// of our SDL display
 				const char* argv[] = { "", "--layer", "10010", "--loop", "--no-osd", "--aspect-mode", "letterbox", "--win", buf, "-b", "", NULL };
-				
-				LOG(LogDebug) << "Subtitles: " << subtitles;
 
-				if (!subtitles.empty()) 
+				// test if there's a path for possible subtitles, meaning we're a screensaver video
+				if (!subtitlePath.empty())
 				{	
-					LOG(LogDebug) << "We have Subs! Setting subtitles: " << subtitles;
-					argv[7] = "--subtitles";
-					argv[8] = subtitles.c_str();
+					// if we are rendering a screensaver
+					if (Settings::getInstance()->getBool("ScreenSaverGameName"))
+					{
+						// if we have chosen to render subtitles
+						argv[7] = "--subtitles";
+						argv[8] = subtitlePath.c_str();
+						argv[9] = mPlayingVideoPath.c_str();	
+					}
+					else
+					{
+						// if we have chosen NOT to render subtitles in the screensaver
+						argv[7] = mPlayingVideoPath.c_str();
+					}
 				} 				
-				
+				else
+				{
+					// if we are rendering a video gamelist
+					argv[9] = mPlayingVideoPath.c_str();
+				}
+
 				//const char* argv[] = args;
 				const char* env[] = { "LD_LIBRARY_PATH=/opt/vc/libs:/usr/lib/omxplayer", NULL };
-				// Fill in the empty argument with the video path
-				argv[9] = mPlayingVideoPath.c_str();
+				// Fill in the empty argument with the video path				
 				
 				// Redirect stdout
 				int fdin = open("/dev/null", O_RDONLY);

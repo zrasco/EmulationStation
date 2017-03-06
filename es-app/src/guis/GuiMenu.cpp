@@ -165,7 +165,18 @@ GuiMenu::GuiMenu(Window* window) : GuiComponent(window), mMenu(window, "MAIN MEN
 			auto omx_player = std::make_shared<SwitchComponent>(mWindow);
 			omx_player->setState(Settings::getInstance()->getBool("VideoOmxPlayer"));
 			s->addWithLabel("USE EXPERIMENTAL OMX VIDEO PLAYER", omx_player);
-			s->addSaveFunc([omx_player] { Settings::getInstance()->setBool("VideoOmxPlayer", omx_player->getState()); });
+			s->addSaveFunc([omx_player] 
+			{ 	
+				// need to reload all views to re-create the right video components
+				bool needReload = false;
+				if(Settings::getInstance()->getBool("VideoOmxPlayer") != omx_player->getState())
+					needReload = true;
+
+				Settings::getInstance()->setBool("VideoOmxPlayer", omx_player->getState());
+
+				if(needReload)
+					ViewController::get()->reloadAll();
+			});
 
 			// Allow ScreenSaver Controls - ScreenSaverControls
 			auto ss_controls = std::make_shared<SwitchComponent>(mWindow);
@@ -173,12 +184,17 @@ GuiMenu::GuiMenu(Window* window) : GuiComponent(window), mMenu(window, "MAIN MEN
 			s->addWithLabel("SCREENSAVER CONTROLS", ss_controls);
 			s->addSaveFunc([ss_controls] { Settings::getInstance()->setBool("ScreenSaverControls", ss_controls->getState()); });
 
-
 			// Launch Game on Start from ScreenSaver - LaunchOnStart
 			auto launch_on_start = std::make_shared<SwitchComponent>(mWindow);
 			launch_on_start->setState(Settings::getInstance()->getBool("LaunchOnStart"));
 			s->addWithLabel("LAUNCH GAME FROM VIDEO SCREENSAVER", launch_on_start);
 			s->addSaveFunc([launch_on_start] { Settings::getInstance()->setBool("LaunchOnStart", launch_on_start->getState()); });
+
+			// Render Video Game Name as subtitles
+			auto ss_subtitles = std::make_shared<SwitchComponent>(mWindow);
+			ss_subtitles->setState(Settings::getInstance()->getBool("ScreenSaverGameName"));
+			s->addWithLabel("SHOW GAME AND SYSTEM NAME ON SCREENSAVER", ss_subtitles);
+			s->addSaveFunc([ss_subtitles] { Settings::getInstance()->setBool("ScreenSaverGameName", ss_subtitles->getState()); });
 
 
 			mWindow->pushGui(s);
