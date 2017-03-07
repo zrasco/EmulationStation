@@ -358,4 +358,20 @@ void GuiComponent::onHide()
 		getChild(i)->onHide();
 }
 
+void GuiComponent::onScreenSaverActivate()		
+{		
+	for(unsigned int i = 0; i < getChildCount(); i++)		
+		getChild(i)->onScreenSaverActivate();		
+}		
+  		  
+void GuiComponent::onScreenSaverDeactivate()		
+{		
+	for(unsigned int i = 0; i < getChildCount(); i++)		
+		getChild(i)->onScreenSaverDeactivate();		
+}
 
+void GuiComponent::topWindow(bool isTop)
+{
+	for(unsigned int i = 0; i < getChildCount(); i++)
+		getChild(i)->topWindow(isTop);
+}

@@ -95,10 +95,11 @@ GuiMenu::GuiMenu(Window* window) : GuiComponent(window), mMenu(window, "MAIN MEN
 			s->addSaveFunc([screensaver_time] { Settings::getInstance()->setInt("ScreenSaverTime", (int)round(screensaver_time->getValue()) * (1000 * 60)); });
 
 			// screensaver behavior
-			auto screensaver_behavior = std::make_shared< OptionListComponent<std::string> >(mWindow, "TRANSITION STYLE", false);
+			auto screensaver_behavior = std::make_shared< OptionListComponent<std::string> >(mWindow, "STYLE", false);
 			std::vector<std::string> screensavers;
 			screensavers.push_back("dim");
 			screensavers.push_back("black");
+			screensavers.push_back("random video");
 			for(auto it = screensavers.begin(); it != screensavers.end(); it++)
 				screensaver_behavior->add(*it, *it, Settings::getInstance()->getString("ScreenSaverBehavior") == *it);
 			s->addWithLabel("SCREENSAVER BEHAVIOR", screensaver_behavior);
@@ -159,6 +160,42 @@ GuiMenu::GuiMenu(Window* window) : GuiComponent(window), mMenu(window, "MAIN MEN
 						ViewController::get()->reloadAll(); // TODO - replace this with some sort of signal-based implementation
 				});
 			}
+
+			// Video Player - VideoOmxPlayer
+			auto omx_player = std::make_shared<SwitchComponent>(mWindow);
+			omx_player->setState(Settings::getInstance()->getBool("VideoOmxPlayer"));
+			s->addWithLabel("USE EXPERIMENTAL OMX VIDEO PLAYER", omx_player);
+			s->addSaveFunc([omx_player] 
+			{ 	
+				// need to reload all views to re-create the right video components
+				bool needReload = false;
+				if(Settings::getInstance()->getBool("VideoOmxPlayer") != omx_player->getState())
+					needReload = true;
+
+				Settings::getInstance()->setBool("VideoOmxPlayer", omx_player->getState());
+
+				if(needReload)
+					ViewController::get()->reloadAll();
+			});
+
+			// Allow ScreenSaver Controls - ScreenSaverControls
+			auto ss_controls = std::make_shared<SwitchComponent>(mWindow);
+			ss_controls->setState(Settings::getInstance()->getBool("ScreenSaverControls"));
+			s->addWithLabel("SCREENSAVER CONTROLS", ss_controls);
+			s->addSaveFunc([ss_controls] { Settings::getInstance()->setBool("ScreenSaverControls", ss_controls->getState()); });
+
+			// Launch Game on Start from ScreenSaver - LaunchOnStart
+			auto launch_on_start = std::make_shared<SwitchComponent>(mWindow);
+			launch_on_start->setState(Settings::getInstance()->getBool("LaunchOnStart"));
+			s->addWithLabel("LAUNCH GAME FROM VIDEO SCREENSAVER", launch_on_start);
+			s->addSaveFunc([launch_on_start] { Settings::getInstance()->setBool("LaunchOnStart", launch_on_start->getState()); });
+
+			// Render Video Game Name as subtitles
+			auto ss_subtitles = std::make_shared<SwitchComponent>(mWindow);
+			ss_subtitles->setState(Settings::getInstance()->getBool("ScreenSaverGameName"));
+			s->addWithLabel("SHOW GAME AND SYSTEM NAME ON SCREENSAVER", ss_subtitles);
+			s->addSaveFunc([ss_subtitles] { Settings::getInstance()->setBool("ScreenSaverGameName", ss_subtitles->getState()); });
+
 
 			mWindow->pushGui(s);
 	});
