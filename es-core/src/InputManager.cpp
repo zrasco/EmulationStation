@@ -170,6 +170,7 @@ InputConfig* InputManager::getInputConfigByDevice(int device)
 bool InputManager::parseEvent(const SDL_Event& ev, Window* window)
 {
 	bool causedEvent = false;
+	LOG(LogDebug) << "Event type received: " << ev.type;
 	switch(ev.type)
 	{
 	case SDL_JOYAXISMOTION:
@@ -193,7 +194,10 @@ bool InputManager::parseEvent(const SDL_Event& ev, Window* window)
 		return causedEvent;
 
 	case SDL_JOYBUTTONDOWN:
+		LOG(LogDebug) << "Event type Joy Button Down";
 	case SDL_JOYBUTTONUP:
+		if (ev.type == SDL_JOYBUTTONUP) 
+			LOG(LogDebug) << "Event type Joy Button Up";
 		window->input(getInputConfigByDevice(ev.jbutton.which), Input(ev.jbutton.which, TYPE_BUTTON, ev.jbutton.button, ev.jbutton.state == SDL_PRESSED, false));
 		return true;
 
@@ -202,6 +206,7 @@ bool InputManager::parseEvent(const SDL_Event& ev, Window* window)
 		return true;
 
 	case SDL_KEYDOWN:
+		LOG(LogDebug) << "Event type SDL Key Down";
 		if(ev.key.keysym.sym == SDLK_BACKSPACE && SDL_IsTextInputActive())
 		{
 			window->textInput("\b");
@@ -222,6 +227,7 @@ bool InputManager::parseEvent(const SDL_Event& ev, Window* window)
 		return true;
 
 	case SDL_KEYUP:
+		LOG(LogDebug) << "Event type SDL Key Up";
 		window->input(getInputConfigByDevice(DEVICE_KEYBOARD), Input(DEVICE_KEYBOARD, TYPE_KEY, ev.key.keysym.sym, 0, false));
 		return true;
 

@@ -14,6 +14,7 @@
 #include "platform.h"
 #include "Log.h"
 #include "Window.h"
+#include "SystemScreenSaver.h"
 #include "EmulationStation.h"
 #include "Settings.h"
 #include "ScraperCmdLine.h"
@@ -215,6 +216,7 @@ int main(int argc, char* argv[])
 	atexit(&onExit);
 
 	Window window;
+	SystemScreenSaver screensaver(&window);
 	ViewController::init(&window);
 	window.pushGui(ViewController::get());
 
