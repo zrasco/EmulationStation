@@ -2,6 +2,7 @@
 #include "components/VideoPlayerComponent.h"
 #include "Renderer.h"
 #include "ThemeData.h"
+#include "Settings.h"
 #include "Util.h"
 #include <signal.h>
 #include <wait.h>
