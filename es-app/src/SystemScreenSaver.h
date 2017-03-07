@@ -18,10 +18,6 @@ public:
 	virtual void update(int deltaTime);
 	virtual bool isScreenSaverActive();
 
-// WIP
-
-    virtual std::string getSystemName();
-	virtual std::string getGameName();
 	virtual FileData* getCurrentGame();
 	virtual void launchGame();
 

@@ -135,12 +135,8 @@ void Window::input(InputConfig* config, Input input)
 					// launch game!
 					cancelScreenSaver();
 					mScreenSaver->launchGame();
-				
-					// wake up
-					mTimeSinceLastInput = 0;
-					mSleeping = false;
-					onWake();
-					return;
+					// to force handling the wake up process
+					mSleeping = true;
 				}
 			}
 		}

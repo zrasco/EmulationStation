@@ -20,8 +20,6 @@ public:
 		virtual bool allowSleep() = 0;		
 		virtual void update(int deltaTime) = 0;		
 		virtual bool isScreenSaverActive() = 0;
-		virtual std::string getSystemName() = 0;
-		virtual std::string getGameName() = 0;
 		virtual FileData* getCurrentGame() = 0;
 		virtual void launchGame() = 0;
 	};
@@ -64,10 +62,7 @@ private:
 
 	// Returns true if at least one component on the stack is processing
 	bool isProcessing();
-	//void renderScreenSaver();
-	//void startScreenSaver();
-	//void cancelScreenSaver();
- 
+	
 	HelpComponent* mHelp;
 	ImageComponent* mBackgroundOverlay;
 	ScreenSaver*	mScreenSaver;
