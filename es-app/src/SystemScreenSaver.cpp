@@ -342,34 +342,3 @@ void SystemScreenSaver::launchGame()
  		ViewController::get()->launch(mCurrentGame);
  	}
 }
-
-/*void SystemScreenSaver::input(InputConfig* config, Input input)
-{
-	LOG(LogDebug) << "Detected input while screensaver: " <<  input.string() << " Game Index: " << getGameIndex();
-	if(getGameIndex() >= 0 && (config->isMappedTo("right", input) || config->isMappedTo("start", input))) 
-	{
-		LOG(LogDebug) << "Detected right input while video screensaver";
-		if(config->isMappedTo("right", input)) 
-		{
-			LOG(LogDebug) << "Next video!";
-			// handle screensaver control, first stab
-			cancelScreenSaver();
-			startScreenSaver();
-		}
-		else if(config->isMappedTo("start", input)) 
-		{
-			// launch game!
-			LOG(LogDebug) << "Launch Game: " << getGameName() << " - System: " << getSystemName();
-
-			// get game info
-			
-
-			// wake up
-			mTimeSinceLastInput = 0;
-			cancelScreenSaver();
-			mSleeping = false;
-			onWake();
-		}
-	}
-}
-*/
