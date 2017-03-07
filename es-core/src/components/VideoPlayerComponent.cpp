@@ -93,7 +93,6 @@ void VideoPlayerComponent::startVideo()
 
 				//const char* argv[] = args;
 				const char* env[] = { "LD_LIBRARY_PATH=/opt/vc/libs:/usr/lib/omxplayer", NULL };
-				// Fill in the empty argument with the video path				
 				
 				// Redirect stdout
 				int fdin = open("/dev/null", O_RDONLY);

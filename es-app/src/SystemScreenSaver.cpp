@@ -82,12 +82,8 @@ void SystemScreenSaver::startScreenSaver()
 		{
 		// Create the correct type of video component
 #ifdef _RPI_
-			// commenting out as we're defaulting to OMXPlayer for screensaver on the Pi
-			// better resolution, and no overlays on screensavers at the moment
-			//if (Settings::getInstance()->getBool("VideoOmxPlayer"))
+			// We're defaulting to OMXPlayer for screensaver on the Pi
 			mVideoScreensaver = new VideoPlayerComponent(mWindow, getTitlePath());
-			//else
-			//	mVideoScreensaver = new VideoVlcComponent(mWindow, getTitlePath());
 #else
 			mVideoScreensaver = new VideoVlcComponent(mWindow, getTitlePath());
 #endif
@@ -120,8 +116,7 @@ void SystemScreenSaver::renderScreenSaver()
 {
 	float lOpacity = mOpacity;
 	#ifdef _RPI_
-	// commenting out as we're defaulting to OMXPlayer for screensaver on the Pi
-	//if (Settings::getInstance()->getBool("VideoOmxPlayer"))
+	// If random video on the Pi, we're using OMX so we need to have black background
 	if (Settings::getInstance()->getString("ScreenSaverBehavior") == "random video")
 		lOpacity = 1.0f;
 	#endif
@@ -212,36 +207,28 @@ void SystemScreenSaver::pickRandomVideo(std::string& path)
 							// Yes. Resolve to a full path
 							path = resolvePath(videoNode.text().get(), (*it)->getStartPath(), true).generic_string();	
 							mSystemName = (*it)->getFullName();
-							LOG(LogDebug) << "Setting System Name: " << mSystemName;
 							mGameName = fileNode.child("name").text().get();
-							LOG(LogDebug) << "Setting Game Name: " << mGameName;
-
+							
 							// getting corresponding FileData
 
 							// try the easy way. Should work for the majority of cases, unless in subfolders
 							FileData* rootFileData = (*it)->getRootFolder();
 							std::string gamePath = resolvePath(fileNode.child("path").text().get(), (*it)->getStartPath(), false).string();
-							LOG(LogDebug) << "Got Root Folder: " << rootFileData->getName();
 							
-							//LOG(LogDebug) << "Shortened Path: " << gamePath.replace(0, (*it)->getStartPath().length()+1, "");
 							std::string shortPath = gamePath;
 							shortPath = shortPath.replace(0, (*it)->getStartPath().length()+1, "");
-							LOG(LogDebug) << "Searching for Path: " << gamePath;
-							LOG(LogDebug) << "Searching for Short Path: " << shortPath;
-
+							
 							const std::unordered_map<std::string, FileData*>& children = rootFileData->getChildrenByFilename();
 							std::unordered_map<std::string, FileData*>::const_iterator screenSaverGame = children.find(shortPath);
-							//LOG(LogDebug) << "Sample Path: " << children.begin()->first;
-							//const FileData* screenSaverGame = &(*(children.find(path))).second;
-
+							
 							if (screenSaverGame != children.end() && false) 
 							{
+								// Found the corresponding FileData
 								mCurrentGame = screenSaverGame->second;
-								LOG(LogDebug) << "Found FileData! " << mCurrentGame->getName();
 							}
 							else 
 							{
-								LOG(LogDebug) << "Couldn't find FileData :( Going for the full iteration.";
+								// Couldn't find FileData. Going for the full iteration.
 								// iterate on children
 								FileType type = GAME;
 								std::vector<FileData*> allFiles = rootFileData->getFilesRecursive(type);
@@ -252,7 +239,6 @@ void SystemScreenSaver::pickRandomVideo(std::string& path)
 									if ((*itf)->getPath() == gamePath)
 									{
 										mCurrentGame = (*itf);
-										LOG(LogDebug) << "Found FileData in iteration! " << mCurrentGame->getName();
 										break;
 									}
 								}
@@ -311,21 +297,6 @@ void SystemScreenSaver::update(int deltaTime)
 		mVideoScreensaver->update(deltaTime);
 }
 
-std::string SystemScreenSaver::getSystemName()
-{
-	LOG(LogDebug) << "Getting System Name";
-	LOG(LogDebug) << "System Name: " << mSystemName;
-	return mSystemName;
-}
-
-std::string SystemScreenSaver::getGameName() 
-{
-
-	LOG(LogDebug) << "Getting Game Name";
-	LOG(LogDebug) << "Game Name: " << mGameName;
-	return mGameName;
-}
-
 FileData* SystemScreenSaver::getCurrentGame()
 {
 	return mCurrentGame;
@@ -342,34 +313,3 @@ void SystemScreenSaver::launchGame()
  		ViewController::get()->launch(mCurrentGame);
  	}
 }
-
-/*void SystemScreenSaver::input(InputConfig* config, Input input)
-{
-	LOG(LogDebug) << "Detected input while screensaver: " <<  input.string() << " Game Index: " << getGameIndex();
-	if(getGameIndex() >= 0 && (config->isMappedTo("right", input) || config->isMappedTo("start", input))) 
-	{
-		LOG(LogDebug) << "Detected right input while video screensaver";
-		if(config->isMappedTo("right", input)) 
-		{
-			LOG(LogDebug) << "Next video!";
-			// handle screensaver control, first stab
-			cancelScreenSaver();
-			startScreenSaver();
-		}
-		else if(config->isMappedTo("start", input)) 
-		{
-			// launch game!
-			LOG(LogDebug) << "Launch Game: " << getGameName() << " - System: " << getSystemName();
-
-			// get game info
-			
-
-			// wake up
-			mTimeSinceLastInput = 0;
-			cancelScreenSaver();
-			mSleeping = false;
-			onWake();
-		}
-	}
-}
-*/
