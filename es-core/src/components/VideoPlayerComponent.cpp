@@ -70,8 +70,16 @@ void VideoPlayerComponent::startVideo()
 
 				// test if there's a path for possible subtitles, meaning we're a screensaver video
 				if (!subtitlePath.empty())
-				{	
+				{						
 					// if we are rendering a screensaver
+
+					// check if we want to stretch the image
+					if (Settings::getInstance()->getBool("StretchVideoOnScreenSaver"))
+					{
+						argv[6] = "stretch";
+					}
+
+
 					if (Settings::getInstance()->getBool("ScreenSaverGameName"))
 					{
 						// if we have chosen to render subtitles
@@ -88,6 +96,11 @@ void VideoPlayerComponent::startVideo()
 				else
 				{
 					// if we are rendering a video gamelist
+					if (Settings::getInstance()->getBool("StretchVideoOnTheme"))
+					{
+						argv[6] = "stretch";
+					}
+
 					argv[9] = mPlayingVideoPath.c_str();
 				}
 
