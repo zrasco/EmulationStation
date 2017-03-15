@@ -139,6 +139,10 @@ void Window::input(InputConfig* config, Input input)
 					mSleeping = true;
 				}
 			}
+			else if(input.value != 0) 
+			{
+				return;
+			}
 		}
 	}
 

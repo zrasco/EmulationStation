@@ -66,28 +66,41 @@ void VideoPlayerComponent::startVideo()
 				sprintf(buf, "%d,%d,%d,%d", (int)x, (int)y, (int)(x + mSize.x()), (int)(y + mSize.y()));
 				// We need to specify the layer of 10000 or above to ensure the video is displayed on top
 				// of our SDL display
-				const char* argv[] = { "", "--layer", "10010", "--loop", "--no-osd", "--aspect-mode", "letterbox", "--win", buf, "-b", "", NULL };
+				const char* argv[] = { "", "--layer", "10010", "--loop", "--no-osd", "--aspect-mode", "letterbox", "--win", buf, "-b", "", "", "", "", NULL };
 
 				// test if there's a path for possible subtitles, meaning we're a screensaver video
 				if (!subtitlePath.empty())
-				{	
+				{						
 					// if we are rendering a screensaver
+
+					// check if we want to stretch the image
+					if (Settings::getInstance()->getBool("StretchVideoOnScreenSaver"))
+					{
+						argv[6] = "stretch";
+					}
+
+
 					if (Settings::getInstance()->getBool("ScreenSaverGameName"))
 					{
 						// if we have chosen to render subtitles
-						argv[7] = "--subtitles";
-						argv[8] = subtitlePath.c_str();
-						argv[9] = mPlayingVideoPath.c_str();	
+						argv[9] = "--subtitles";
+						argv[10] = subtitlePath.c_str();
+						argv[11] = mPlayingVideoPath.c_str();	
 					}
 					else
 					{
 						// if we have chosen NOT to render subtitles in the screensaver
-						argv[7] = mPlayingVideoPath.c_str();
+						argv[9] = mPlayingVideoPath.c_str();
 					}
 				} 				
 				else
 				{
 					// if we are rendering a video gamelist
+					if (Settings::getInstance()->getBool("StretchVideoOnTheme"))
+					{
+						argv[6] = "stretch";
+					}
+
 					argv[9] = mPlayingVideoPath.c_str();
 				}
 
