@@ -349,7 +349,6 @@ bool ThemeData::hasView(const std::string& view)
   	return (viewIt != mViews.end());
  }
 
-
 const ThemeData::ThemeElement* ThemeData::getElement(const std::string& view, const std::string& element, const std::string& expectedType) const
 {
 	auto viewIt = mViews.find(view);
