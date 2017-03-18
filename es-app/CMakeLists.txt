@@ -11,6 +11,7 @@ set(ES_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VolumeControl.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Gamelist.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SystemScreenSaver.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/FileFilterIndex.h
 
     # GuiComponents
     ${CMAKE_CURRENT_SOURCE_DIR}/src/components/AsyncReqComponent.h
@@ -27,6 +28,7 @@ set(ES_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/guis/GuiSettings.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/guis/GuiScraperMulti.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/guis/GuiScraperStart.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/guis/GuiGamelistFilter.h
 
     # Scrapers
     ${CMAKE_CURRENT_SOURCE_DIR}/src/scrapers/Scraper.h
@@ -59,6 +61,7 @@ set(ES_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VolumeControl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Gamelist.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SystemScreenSaver.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/FileFilterIndex.cpp
 
     # GuiComponents
     ${CMAKE_CURRENT_SOURCE_DIR}/src/components/AsyncReqComponent.cpp
@@ -74,6 +77,7 @@ set(ES_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/guis/GuiSettings.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/guis/GuiScraperMulti.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/guis/GuiScraperStart.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/guis/GuiGamelistFilter.cpp
 
     # Scrapers
     ${CMAKE_CURRENT_SOURCE_DIR}/src/scrapers/Scraper.cpp

@@ -102,6 +102,7 @@ private:
 						checkboxes.at(i)->setImage(CHECKED_PATH);
 					}
 					mParent->onSelectedChanged();
+					
 				});
 
 				mMenu.addButton("SELECT NONE", "select none", [this, checkboxes] {
@@ -111,6 +112,7 @@ private:
 						checkboxes.at(i)->setImage(UNCHECKED_PATH);
 					}
 					mParent->onSelectedChanged();
+					
 				});
 			}
 
@@ -248,6 +250,24 @@ public:
 		e.selected = selected;
 
 		mEntries.push_back(e);
+		onSelectedChanged();
+	}
+
+	void selectAll() 
+	{
+		for(unsigned int i = 0; i < mEntries.size(); i++)
+		{
+			mEntries.at(i).selected = true;			
+		}
+		onSelectedChanged();
+	}
+
+	void selectNone() 
+	{
+		for(unsigned int i = 0; i < mEntries.size(); i++)
+		{
+			mEntries.at(i).selected = false;			
+		}
 		onSelectedChanged();
 	}
 

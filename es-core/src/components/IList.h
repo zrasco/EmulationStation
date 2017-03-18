@@ -148,7 +148,7 @@ public:
 
 		return false;
 	}
-	
+
 	// entry management
 	void add(const Entry& e)
 	{
