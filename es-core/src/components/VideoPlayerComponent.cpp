@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include "Log.h"
 
 VideoPlayerComponent::VideoPlayerComponent(Window* window, std::string path) :
 	VideoComponent(window),
@@ -53,11 +54,13 @@ void VideoPlayerComponent::startVideo()
 			{
 				mPlayerPid = pid;
 				// Update the playing state
+				signal(SIGCHLD, catch_child);
 				mIsPlaying = true;
 				mFadeIn = 0.0f;
 			}
 			else
 			{
+				
 				// Find out the pixel position of the video view and build a command line for
 				// omxplayer to position it in the right place
 				char buf[32];
@@ -114,17 +117,25 @@ void VideoPlayerComponent::startVideo()
 				dup2(fdout, 1);
 				// Run the omxplayer binary
 				execve("/usr/bin/omxplayer.bin", (char**)argv, (char**)env);
+
 				_exit(EXIT_FAILURE);
 			}
 		}
 	}
 }
 
+void catch_child(int sig_num)
+{
+    /* when we get here, we know there's a zombie child waiting */
+    int child_status;
+    wait(&child_status);
+}
+
 void VideoPlayerComponent::stopVideo()
 {
 	mIsPlaying = false;
 	mStartDelayed = false;
-
+	
 	// Stop the player process
 	if (mPlayerPid != -1)
 	{
