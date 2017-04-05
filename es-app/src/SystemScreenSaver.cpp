@@ -67,7 +67,7 @@ void SystemScreenSaver::startScreenSaver()
 		pickRandomVideo(path);
 
 		int retry = 20;
-		while(retry > 0 && (path.empty() || !boost::filesystem::exists(path)) || mCurrentGame == NULL)
+		while(retry > 0 && ((path.empty() || !boost::filesystem::exists(path)) || mCurrentGame == NULL))
 		{
 			LOG(LogInfo) << "Hm. Something went wrong with: \"" << path << "\"; Retries left (out of 20): " << retry;
 			retry--;

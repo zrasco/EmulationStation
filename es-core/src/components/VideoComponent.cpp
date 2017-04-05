@@ -47,7 +47,7 @@ VideoComponent::VideoComponent(Window* window) :
 	mShowing(false),
 	mScreensaverActive(false),
 	mDisable(false),
-	mScreensaverMode(false)
+	mScreensaverMode(false),
 	mTargetIsMax(false),
 	mOrigin(0, 0),
 	mTargetSize(0, 0)
@@ -291,38 +291,6 @@ std::vector<HelpPrompt> VideoComponent::getHelpPrompts()
 	std::vector<HelpPrompt> ret;
 	ret.push_back(HelpPrompt("a", "select"));
 	return ret;
-}
-
-void VideoComponent::setupContext()
-{
-	if (!mContext.valid)
-	{
-		// Create an RGBA surface to render the video into
-		mContext.surface = SDL_CreateRGBSurface(SDL_SWSURFACE, (int)mVideoWidth, (int)mVideoHeight, 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
-		mContext.mutex = SDL_CreateMutex();
-		mContext.valid = true;
-		resize();
-	}
-}
-
-void VideoComponent::freeContext()
-{
-	if (mContext.valid)
-	{
-		SDL_FreeSurface(mContext.surface);
-		SDL_DestroyMutex(mContext.mutex);
-		mContext.valid = false;
-	}
-}
-
-void VideoComponent::setupVLC()
-{
-	// If VLC hasn't been initialised yet then do it now
-	if (!mVLC)
-	{
-		const char* args[] = { "--quiet" };
-		mVLC = libvlc_new(sizeof(args) / sizeof(args[0]), args);
-	}
 }
 
 void VideoComponent::handleStartDelay()
