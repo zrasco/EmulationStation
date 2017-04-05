@@ -48,6 +48,7 @@ public:
 	virtual const std::string& getVideoPath() const;
 	virtual const std::string& getMarqueePath() const;
 
+	const std::vector<FileData*>& getChildrenListToDisplay();
 	std::vector<FileData*> getFilesRecursive(unsigned int typeMask) const;
 
 	void addChild(FileData* file); // Error if mType != FOLDER
@@ -82,4 +83,5 @@ private:
 	FileData* mParent;
 	std::unordered_map<std::string,FileData*> mChildrenByFilename;
 	std::vector<FileData*> mChildren;
+	std::vector<FileData*> mFilteredChildren;
 };

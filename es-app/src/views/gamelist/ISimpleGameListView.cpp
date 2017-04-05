@@ -47,7 +47,7 @@ void ISimpleGameListView::onFileChanged(FileData* file, FileChangeType change)
 	// we could be tricky here to be efficient;
 	// but this shouldn't happen very often so we'll just always repopulate
 	FileData* cursor = getCursor();
-	populateList(cursor->getParent()->getChildren());
+	populateList(cursor->getParent()->getChildrenListToDisplay());
 	setCursor(cursor);
 }
 
@@ -67,7 +67,7 @@ bool ISimpleGameListView::input(InputConfig* config, Input input)
 				if(cursor->getChildren().size() > 0)
 				{
 					mCursorStack.push(cursor);
-					populateList(cursor->getChildren());
+					populateList(cursor->getChildrenListToDisplay());
 				}
 			}
 				

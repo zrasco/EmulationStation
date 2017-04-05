@@ -14,7 +14,7 @@ BasicGameListView::BasicGameListView(Window* window, FileData* root)
 	mList.setPosition(0, mSize.y() * 0.2f);
 	addChild(&mList);
 
-	populateList(root->getChildren());
+	populateList(root->getChildrenListToDisplay());
 }
 
 void BasicGameListView::onThemeChanged(const std::shared_ptr<ThemeData>& theme)
@@ -41,23 +41,9 @@ void BasicGameListView::populateList(const std::vector<FileData*>& files)
 	mList.clear();
 	mHeaderText.setText(files.at(0)->getSystem()->getFullName());
 
-	// this looks ugly, but I believe may be more performant
-	// if it's not indexed at all, no need to test every single file
-	FileFilterIndex* idx = this->mRoot->getSystem()->getIndex();
-	if (idx->isFiltered()) {
-		for(auto it = files.begin(); it != files.end(); it++)
-		{
-			if (idx->showFile((*it))) {
-				mList.add((*it)->getName(), *it, ((*it)->getType() == FOLDER));
-			}
-		}
-	}
-	else 
+	for(auto it = files.begin(); it != files.end(); it++)
 	{
-		for(auto it = files.begin(); it != files.end(); it++)
-		{
-			mList.add((*it)->getName(), *it, ((*it)->getType() == FOLDER));
-		}
+		mList.add((*it)->getName(), *it, ((*it)->getType() == FOLDER));
 	}
 	
 	// need to check if list is empty, and if so add a placeholder node
@@ -80,7 +66,7 @@ void BasicGameListView::setCursor(FileData* cursor)
 {
 	if(!mList.setCursor(cursor))
 	{
-		populateList(cursor->getParent()->getChildren());
+		populateList(cursor->getParent()->getChildrenListToDisplay());
 		mList.setCursor(cursor);
 
 		// update our cursor stack in case our cursor just got set to some folder we weren't in before

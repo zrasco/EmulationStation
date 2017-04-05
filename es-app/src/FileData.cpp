@@ -81,6 +81,25 @@ const std::string& FileData::getThumbnailPath() const
 		return metadata.get("image");
 }
 
+const std::vector<FileData*>& FileData::getChildrenListToDisplay() {
+	
+	FileFilterIndex* idx = mSystem->getIndex();
+	if (idx->isFiltered()) {
+		mFilteredChildren.clear();
+		for(auto it = mChildren.begin(); it != mChildren.end(); it++)
+		{
+			if (idx->showFile((*it))) {
+				mFilteredChildren.push_back(*it);
+			}
+		}
+		return mFilteredChildren;
+	}
+	else 
+	{
+		return mChildren;
+	}
+}
+
 const std::string& FileData::getVideoPath() const
 {
 	return metadata.get("video");
