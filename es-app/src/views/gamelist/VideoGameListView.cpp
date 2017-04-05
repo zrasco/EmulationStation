@@ -264,9 +264,9 @@ void VideoGameListView::updateInfoPanel()
 			thumbnail_path.insert(0, getHomePath());
 		}
 
-		if (!mVideo.setVideo(video_path))
+		if (!mVideo->setVideo(video_path))
 		{
-			mVideo.setDefaultVideo();
+			mVideo->setDefaultVideo();
 		}
 
 		mVideoPlaying = true;
