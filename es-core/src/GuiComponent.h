@@ -80,7 +80,10 @@ public:
 	
 	virtual void onShow();
 	virtual void onHide();
-
+	virtual void onScreenSaverActivate();		
+	virtual void onScreenSaverDeactivate();
+	virtual void topWindow(bool isTop);
+	
 	// Default implementation just handles <pos> and <size> tags as normalized float pairs.
 	// You probably want to keep this behavior for any derived classes as well as add your own.
 	virtual void applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties);

@@ -20,7 +20,7 @@ public:
 	virtual void onThemeChanged(const std::shared_ptr<ThemeData>& theme);
 
 	virtual FileData* getCursor() = 0;
-	virtual void setCursor(FileData*) = 0;
+	virtual void setCursor(FileData*) = 0;	
 
 	virtual bool input(InputConfig* config, Input input) override;
 

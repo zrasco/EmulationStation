@@ -2,55 +2,72 @@
 #include "GuiMetaDataEd.h"
 #include "views/gamelist/IGameListView.h"
 #include "views/ViewController.h"
+#include "Log.h"
 
 GuiGamelistOptions::GuiGamelistOptions(Window* window, SystemData* system) : GuiComponent(window), 
-	mSystem(system), 
-	mMenu(window, "OPTIONS")
+	mSystem(system), mMenu(window, "OPTIONS"), fromPlaceholder(false), mFiltersChanged(false)
 {
 	addChild(&mMenu);
 
-	// jump to letter
-	char curChar = toupper(getGamelist()->getCursor()->getName()[0]);
-	if(curChar < 'A' || curChar > 'Z')
-		curChar = 'A';
-
-	mJumpToLetterList = std::make_shared<LetterList>(mWindow, "JUMP TO LETTER", false);
-	for(char c = 'A'; c <= 'Z'; c++)
-		mJumpToLetterList->add(std::string(1, c), c, c == curChar);
-
+	// check it's not a placeholder folder - if it is, only show "Filter Options"
+	FileData* file = getGamelist()->getCursor();
+	fromPlaceholder = (file->getName().empty() && file->getPath().empty());
+	bool isFiltered = system->getIndex()->isFiltered();
 	ComponentListRow row;
-	row.addElement(std::make_shared<TextComponent>(mWindow, "JUMP TO LETTER", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
-	row.addElement(mJumpToLetterList, false);
-	row.input_handler = [&](InputConfig* config, Input input) {
-		if(config->isMappedTo("a", input) && input.value)
-		{
-			jumpToLetter();
-			return true;
-		}
-		else if(mJumpToLetterList->input(config, input))
-		{
-			return true;
-		}
-		return false;
-	};
-	mMenu.addRow(row);
 
-	// sort list by
-	mListSort = std::make_shared<SortList>(mWindow, "SORT GAMES BY", false);
-	for(unsigned int i = 0; i < FileSorts::SortTypes.size(); i++)
-	{
-		const FileData::SortType& sort = FileSorts::SortTypes.at(i);
-		mListSort->add(sort.description, &sort, i == 0); // TODO - actually make the sort type persistent
-	}
-
-	mMenu.addWithLabel("SORT GAMES BY", mListSort);
-
-	// edit game metadata
+	// show filtered menu
 	row.elements.clear();
-	row.addElement(std::make_shared<TextComponent>(mWindow, "EDIT THIS GAME'S METADATA", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
+	row.addElement(std::make_shared<TextComponent>(mWindow, "FILTER GAMELIST", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
 	row.addElement(makeArrow(mWindow), false);
-	row.makeAcceptInputHandler(std::bind(&GuiGamelistOptions::openMetaDataEd, this));
+	row.makeAcceptInputHandler(std::bind(&GuiGamelistOptions::openGamelistFilter, this));
 	mMenu.addRow(row);
+	row.elements.clear();
+
+	if (!fromPlaceholder) {
+
+		if (!isFiltered) {
+			// jump to letter
+			char curChar = toupper(getGamelist()->getCursor()->getName()[0]);
+			if(curChar < 'A' || curChar > 'Z')
+				curChar = 'A';
+
+			mJumpToLetterList = std::make_shared<LetterList>(mWindow, "JUMP TO LETTER", false);
+			for(char c = 'A'; c <= 'Z'; c++)
+				mJumpToLetterList->add(std::string(1, c), c, c == curChar);
+
+			row.addElement(std::make_shared<TextComponent>(mWindow, "JUMP TO LETTER", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
+			row.addElement(mJumpToLetterList, false);
+			row.input_handler = [&](InputConfig* config, Input input) {
+				if(config->isMappedTo("a", input) && input.value)
+				{
+					jumpToLetter();
+					return true;
+				}
+				else if(mJumpToLetterList->input(config, input))
+				{
+					return true;
+				}
+				return false;
+			};
+			mMenu.addRow(row);
+		}
+
+		// sort list by
+		mListSort = std::make_shared<SortList>(mWindow, "SORT GAMES BY", false);
+		for(unsigned int i = 0; i < FileSorts::SortTypes.size(); i++)
+		{
+			const FileData::SortType& sort = FileSorts::SortTypes.at(i);
+			mListSort->add(sort.description, &sort, i == 0); // TODO - actually make the sort type persistent
+		}
+
+		mMenu.addWithLabel("SORT GAMES BY", mListSort);
+
+		row.elements.clear();
+		row.addElement(std::make_shared<TextComponent>(mWindow, "EDIT THIS GAME'S METADATA", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
+		row.addElement(makeArrow(mWindow), false);
+		row.makeAcceptInputHandler(std::bind(&GuiGamelistOptions::openMetaDataEd, this));
+		mMenu.addRow(row);
+	}
 
 	// center the menu
 	setSize((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
@@ -60,12 +77,25 @@ GuiGamelistOptions::GuiGamelistOptions(Window* window, SystemData* system) : Gui
 GuiGamelistOptions::~GuiGamelistOptions()
 {
 	// apply sort
-	FileData* root = getGamelist()->getCursor()->getSystem()->getRootFolder();
-	root->sort(*mListSort->getSelected()); // will also recursively sort children
+	if (!fromPlaceholder) {
+		FileData* root = getGamelist()->getCursor()->getSystem()->getRootFolder();
+		root->sort(*mListSort->getSelected()); // will also recursively sort children
 
-	// notify that the root folder was sorted
-	getGamelist()->onFileChanged(root, FILE_SORTED);
+		// notify that the root folder was sorted
+		getGamelist()->onFileChanged(root, FILE_SORTED);
+	} 
+	if (mFiltersChanged) 
+	{
+		ViewController::get()->reloadGameListView(mSystem);
+	}
 }
+
+void GuiGamelistOptions::openGamelistFilter()
+{
+	mFiltersChanged = true;
+	GuiGamelistFilter* ggf = new GuiGamelistFilter(mWindow, mSystem);
+	mWindow->pushGui(ggf);
+}	
 
 void GuiGamelistOptions::openMetaDataEd()
 {
@@ -74,10 +104,22 @@ void GuiGamelistOptions::openMetaDataEd()
 	ScraperSearchParams p;
 	p.game = file;
 	p.system = file->getSystem();
-	mWindow->pushGui(new GuiMetaDataEd(mWindow, &file->metadata, file->metadata.getMDD(), p, file->getPath().filename().string(), 
-		std::bind(&IGameListView::onFileChanged, getGamelist(), file, FILE_METADATA_CHANGED), [this, file] { 
+
+	std::function<void()> deleteBtnFunc;
+
+	if (file->getType() == FOLDER)
+	{
+		deleteBtnFunc = NULL;
+	}
+	else
+	{
+		deleteBtnFunc = [this, file] {
 			getGamelist()->remove(file);
-	}));
+		};
+	}
+
+	mWindow->pushGui(new GuiMetaDataEd(mWindow, &file->metadata, file->metadata.getMDD(), p, file->getPath().filename().string(), 
+		std::bind(&IGameListView::onFileChanged, getGamelist(), file, FILE_METADATA_CHANGED), deleteBtnFunc));
 }
 
 void GuiGamelistOptions::jumpToLetter()
