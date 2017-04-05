@@ -109,7 +109,6 @@ VideoGameListView::VideoGameListView(Window* window, FileData* root) :
 
 	initMDLabels();
 	initMDValues();
-	updateInfoPanel();
 }
 
 VideoGameListView::~VideoGameListView()
@@ -363,4 +362,10 @@ void VideoGameListView::update(int deltaTime)
 {
 	BasicGameListView::update(deltaTime);
 	mVideo->update(deltaTime);
+}
+
+void VideoGameListView::onShow()
+{
+	GuiComponent::onShow();
+	updateInfoPanel();
 }

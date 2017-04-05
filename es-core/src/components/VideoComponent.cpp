@@ -48,6 +48,9 @@ VideoComponent::VideoComponent(Window* window) :
 	mScreensaverActive(false),
 	mDisable(false),
 	mScreensaverMode(false)
+	mTargetIsMax(false),
+	mOrigin(0, 0),
+	mTargetSize(0, 0)
 {
 	// Setup the default configuration
 	mConfig.showSnapshotDelay 		= false;
@@ -75,11 +78,88 @@ void VideoComponent::setOrigin(float originX, float originY)
 	mStaticImage.setOrigin(originX, originY);
 }
 
+void VideoComponent::setResize(float width, float height)
+{
+	mTargetSize << width, height;
+	mTargetIsMax = false;
+	mStaticImage.setResize(width, height);
+	resize();
+}
+
+void VideoComponent::setMaxSize(float width, float height)
+{
+	mTargetSize << width, height;
+	mTargetIsMax = true;
+	mStaticImage.setMaxSize(width, height);
+	resize();
+}
+
 Eigen::Vector2f VideoComponent::getCenter() const
 {
 	return Eigen::Vector2f(mPosition.x() - (getSize().x() * mOrigin.x()) + getSize().x() / 2,
 		mPosition.y() - (getSize().y() * mOrigin.y()) + getSize().y() / 2);
 }
+
+void VideoComponent::resize()
+{
+	if(!mTexture)
+		return;
+
+	const Eigen::Vector2f textureSize(mVideoWidth, mVideoHeight);
+
+	if(textureSize.isZero())
+		return;
+
+		// SVG rasterization is determined by height (see SVGResource.cpp), and rasterization is done in terms of pixels
+		// if rounding is off enough in the rasterization step (for images with extreme aspect ratios), it can cause cutoff when the aspect ratio breaks
+		// so, we always make sure the resultant height is an integer to make sure cutoff doesn't happen, and scale width from that
+		// (you'll see this scattered throughout the function)
+		// this is probably not the best way, so if you're familiar with this problem and have a better solution, please make a pull request!
+
+		if(mTargetIsMax)
+		{
+
+			mSize = textureSize;
+
+			Eigen::Vector2f resizeScale((mTargetSize.x() / mSize.x()), (mTargetSize.y() / mSize.y()));
+
+			if(resizeScale.x() < resizeScale.y())
+			{
+				mSize[0] *= resizeScale.x();
+				mSize[1] *= resizeScale.x();
+			}else{
+				mSize[0] *= resizeScale.y();
+				mSize[1] *= resizeScale.y();
+			}
+
+			// for SVG rasterization, always calculate width from rounded height (see comment above)
+			mSize[1] = round(mSize[1]);
+			mSize[0] = (mSize[1] / textureSize.y()) * textureSize.x();
+
+		}else{
+			// if both components are set, we just stretch
+			// if no components are set, we don't resize at all
+			mSize = mTargetSize.isZero() ? textureSize : mTargetSize;
+
+			// if only one component is set, we resize in a way that maintains aspect ratio
+			// for SVG rasterization, we always calculate width from rounded height (see comment above)
+			if(!mTargetSize.x() && mTargetSize.y())
+			{
+				mSize[1] = round(mTargetSize.y());
+				mSize[0] = (mSize.y() / textureSize.y()) * textureSize.x();
+			}else if(mTargetSize.x() && !mTargetSize.y())
+			{
+				mSize[1] = round((mTargetSize.x() / textureSize.x()) * textureSize.y());
+				mSize[0] = (mSize.y() / textureSize.y()) * textureSize.x();
+			}
+		}
+
+	// mSize.y() should already be rounded
+	mTexture->rasterizeAt((int)round(mSize.x()), (int)round(mSize.y()));
+
+	onSizeChanged();
+}
+
 
 void VideoComponent::onSizeChanged()
 {
@@ -117,8 +197,6 @@ void VideoComponent::setImage(std::string path)
 		return;
 	
 	mStaticImage.setImage(path);
-	// Make the image stretch to fill the video region
-	mStaticImage.setSize(getSize());
 	mFadeIn = 0.0f;
 	mStaticImagePath = path;
 }
@@ -180,11 +258,15 @@ void VideoComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const s
 	{
 		Eigen::Vector2f denormalized = elem->get<Eigen::Vector2f>("pos").cwiseProduct(scale);
 		setPosition(Eigen::Vector3f(denormalized.x(), denormalized.y(), 0));
+		mStaticImage.setPosition(Eigen::Vector3f(denormalized.x(), denormalized.y(), 0));
 	}
 
-	if ((properties & ThemeFlags::SIZE) && elem->has("size"))
+	if(properties & ThemeFlags::SIZE)
 	{
-		setSize(elem->get<Eigen::Vector2f>("size").cwiseProduct(scale));
+		if(elem->has("size"))
+			setResize(elem->get<Eigen::Vector2f>("size").cwiseProduct(scale));
+		else if(elem->has("maxSize"))
+			setMaxSize(elem->get<Eigen::Vector2f>("maxSize").cwiseProduct(scale));
 	}
 
 	// position + size also implies origin
@@ -202,11 +284,6 @@ void VideoComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const s
 
 	if (elem->has("showSnapshotDelay"))
 		mConfig.showSnapshotDelay = elem->get<bool>("showSnapshotDelay");
-
-	// Update the embeded static image
-	mStaticImage.setPosition(getPosition());
-	mStaticImage.setMaxSize(getSize());
-	mStaticImage.setSize(getSize());
 }
 
 std::vector<HelpPrompt> VideoComponent::getHelpPrompts()
@@ -214,6 +291,38 @@ std::vector<HelpPrompt> VideoComponent::getHelpPrompts()
 	std::vector<HelpPrompt> ret;
 	ret.push_back(HelpPrompt("a", "select"));
 	return ret;
+}
+
+void VideoComponent::setupContext()
+{
+	if (!mContext.valid)
+	{
+		// Create an RGBA surface to render the video into
+		mContext.surface = SDL_CreateRGBSurface(SDL_SWSURFACE, (int)mVideoWidth, (int)mVideoHeight, 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
+		mContext.mutex = SDL_CreateMutex();
+		mContext.valid = true;
+		resize();
+	}
+}
+
+void VideoComponent::freeContext()
+{
+	if (mContext.valid)
+	{
+		SDL_FreeSurface(mContext.surface);
+		SDL_DestroyMutex(mContext.mutex);
+		mContext.valid = false;
+	}
+}
+
+void VideoComponent::setupVLC()
+{
+	// If VLC hasn't been initialised yet then do it now
+	if (!mVLC)
+	{
+		const char* args[] = { "--quiet" };
+		mVLC = libvlc_new(sizeof(args) / sizeof(args[0]), args);
+	}
 }
 
 void VideoComponent::handleStartDelay()

@@ -55,6 +55,21 @@ public:
 	void onSizeChanged() override;
 	void setOpacity(unsigned char opacity) override;
 
+	// Resize the video to fit this size. If one axis is zero, scale that axis to maintain aspect ratio.
+	// If both are non-zero, potentially break the aspect ratio.  If both are zero, no resizing.
+	// Can be set before or after a video is loaded.
+	// setMaxSize() and setResize() are mutually exclusive.
+	void setResize(float width, float height);
+	inline void setResize(const Eigen::Vector2f& size) { setResize(size.x(), size.y()); }
+
+	// Resize the video to be as large as possible but fit within a box of this size.
+	// Can be set before or after a video is loaded.
+	// Never breaks the aspect ratio. setMaxSize() and setResize() are mutually exclusive.
+	void setMaxSize(float width, float height);
+	inline void setMaxSize(const Eigen::Vector2f& size) { setMaxSize(size.x(), size.y()); }
+
+	void render(const Eigen::Affine3f& parentTrans) override;
+
 	virtual void applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties) override;
 
 	virtual std::vector<HelpPrompt> getHelpPrompts() override;
@@ -64,9 +79,11 @@ public:
 
 	virtual void update(int deltaTime);
 
-	void render(const Eigen::Affine3f& parentTrans) override;
+private:
+	// Calculates the correct mSize from our resizing information (set by setResize/setMaxSize).
+	// Used internally whenever the resizing parameters or texture change.
+	void resize();
 
-protected:
 	// Start the video Immediately
 	virtual void startVideo() = 0;
 	// Stop the video
@@ -87,6 +104,8 @@ protected:
 	unsigned						mVideoWidth;
 	unsigned						mVideoHeight;
 	Eigen::Vector2f 				mOrigin;
+	Eigen::Vector2f					mTargetSize;
+	std::shared_ptr<TextureResource> mTexture;
 	float							mFadeIn;
 	std::string						mStaticImagePath;
 	ImageComponent					mStaticImage;
@@ -100,6 +119,8 @@ protected:
 	bool							mDisable;
 	bool							mScreensaverActive;
 	bool							mScreensaverMode;
+	bool							mTargetIsMax;
+
 	Configuration					mConfig;
 };
 
