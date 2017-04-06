@@ -79,7 +79,7 @@ void Settings::setDefaults()
 
 	mBoolMap["LaunchOnStart"] = true;
 	mBoolMap["ScreenSaverControls"] = true;
-	mBoolMap["ScreenSaverGameName"] = true;
+	mBoolMap["ScreenSaverGameName"] = false;
 	mBoolMap["StretchVideoOnTheme"] = false;
 	mBoolMap["StretchVideoOnScreenSaver"] = false;
 
