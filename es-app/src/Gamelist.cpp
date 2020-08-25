@@ -15,7 +15,7 @@ FileData* findOrCreateFile(SystemData* system, const std::string& path, FileType
 	// first, verify that path is within the system's root folder
 	FileData* root = system->getRootFolder();
 	bool contains = false;
-	std::string relative = Utils::FileSystem::removeCommonPath(path, root->getPath(), contains);
+	std::string relative = Utils::FileSystem::removeCommonPath2(path, root->getPath(), contains);
 
 	if(!contains)
 	{
@@ -117,7 +117,9 @@ void parseGamelist(SystemData* system)
 		FileType type = typeList[i];
 		for(pugi::xml_node fileNode = root.child(tag); fileNode; fileNode = fileNode.next_sibling(tag))
 		{
-			const std::string path = Utils::FileSystem::resolveRelativePath(fileNode.child("path").text().get(), relativeTo, false);
+			// Thanks to uza.vi for use of resolveRelativePath2 to speed things up over a Windows fileshare
+			// Source: https://retropie.org.uk/forum/topic/25571/improve-gamelist-parsing-for-large-rom-collection-in-emulationstation-for-windows
+			const std::string path = Utils::FileSystem::resolveRelativePath2(fileNode.child("path").text().get(), relativeTo, false);
 
 			if(!trustGamelist && !Utils::FileSystem::exists(path))
 			{

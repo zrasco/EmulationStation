@@ -29,6 +29,9 @@
 int SDL_USER_CECBUTTONDOWN = -1;
 int SDL_USER_CECBUTTONUP   = -1;
 
+// Flag to determine if select button is being held down
+bool selectDown = false;
+
 InputManager* InputManager::mInstance = NULL;
 
 InputManager::InputManager() : mKeyboardInputConfig(NULL)
@@ -229,8 +232,34 @@ bool InputManager::parseEvent(const SDL_Event& ev, Window* window)
 
 	case SDL_JOYBUTTONDOWN:
 	case SDL_JOYBUTTONUP:
+	{
+		// Select (6) + Start (7) exits EmulationStation, at least on an Xbox 360 controller...
+		if (ev.jbutton.button == 6)
+		{
+			if (ev.type == SDL_JOYBUTTONDOWN)
+				selectDown = true;
+			else if (ev.type == SDL_JOYBUTTONUP)
+				selectDown = false;
+		}
+		else if (ev.jbutton.button == 7 && selectDown == true)
+		{
+			SDL_Event* quit = new SDL_Event();
+			quit->type = SDL_QUIT;
+			SDL_PushEvent(quit);
+			return false;
+		}
+
+		// Fall through to default behavior except when user quits
 		window->input(getInputConfigByDevice(ev.jbutton.which), Input(ev.jbutton.which, TYPE_BUTTON, ev.jbutton.button, ev.jbutton.state == SDL_PRESSED, false));
 		return true;
+	}
+
+/*
+	case SDL_JOYBUTTONDOWN:
+	case SDL_JOYBUTTONUP:
+		window->input(getInputConfigByDevice(ev.jbutton.which), Input(ev.jbutton.which, TYPE_BUTTON, ev.jbutton.button, ev.jbutton.state == SDL_PRESSED, false));
+		return true;
+*/
 
 	case SDL_JOYHATMOTION:
 		window->input(getInputConfigByDevice(ev.jhat.which), Input(ev.jhat.which, TYPE_HAT, ev.jhat.hat, ev.jhat.value, false));

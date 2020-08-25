@@ -461,6 +461,28 @@ namespace Utils
 
 		} // resolveRelativePath
 
+		std::string resolveRelativePath2(const std::string& _path, const std::string& _relativeTo, const bool _allowHome)
+		{
+			std::string path = getGenericPath(_path);
+			std::string relativeTo = getGenericPath(_relativeTo);
+
+			// nothing to resolve
+			if (!path.length())
+				return path;
+
+			// replace '.' with relativeTo
+			if ((path[0] == '.') && (path[1] == '/'))
+				return (relativeTo + &(path[1]));
+
+			// replace '~' with homePath
+			if (_allowHome && (path[0] == '~') && (path[1] == '/'))
+				return (getHomePath() + &(path[1]));
+
+			// nothing to resolve
+			return path;
+
+		} // resolveRelativePath2
+
 		std::string createRelativePath(const std::string& _path, const std::string& _relativeTo, const bool _allowHome)
 		{
 			bool        contains = false;
@@ -501,6 +523,24 @@ namespace Utils
 			return path;
 
 		} // removeCommonPath
+
+		std::string removeCommonPath2(const std::string& _path, const std::string& _common, bool& _contains)
+		{
+			std::string path = getGenericPath(_path);
+			std::string common = getGenericPath(_common);
+
+			// check if path contains common
+			if (path.find(common) == 0)
+			{
+				_contains = true;
+				return path.substr(common.length() + 1);
+			}
+
+			// it didn't
+			_contains = false;
+			return path;
+
+		} // removeCommonPath2
 
 		std::string resolveSymlink(const std::string& _path)
 		{

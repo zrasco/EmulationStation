@@ -84,7 +84,7 @@ MetaDataList MetaDataList::createFromXML(MetaDataListType type, pugi::xml_node& 
 			std::string value = md.text().get();
 			if (iter->type == MD_PATH)
 			{
-				value = Utils::FileSystem::resolveRelativePath(value, relativeTo, true);
+				value = Utils::FileSystem::resolveRelativePath2(value, relativeTo, true);
 			}
 			mdl.set(iter->key, value);
 		}else{

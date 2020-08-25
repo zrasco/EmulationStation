@@ -29,6 +29,12 @@ namespace Utils
 		std::string getExtension       (const std::string& _path);
 		std::string resolveRelativePath(const std::string& _path, const std::string& _relativeTo, const bool _allowHome);
 		std::string createRelativePath (const std::string& _path, const std::string& _relativeTo, const bool _allowHome);
+
+		// Thanks to uza.vi for use of resolveRelativePath2 &removeCommonPath2 to 
+		// speed things up over a Windows fileshare
+		// Source: https://retropie.org.uk/forum/topic/25571/improve-gamelist-parsing-for-large-rom-collection-in-emulationstation-for-windows
+		std::string resolveRelativePath2(const std::string& _path, const std::string& _relativeTo, const bool _allowHome);
+		std::string removeCommonPath2(const std::string& _path, const std::string& _common, bool& _contains);
 		std::string removeCommonPath   (const std::string& _path, const std::string& _common, bool& _contains);
 		std::string resolveSymlink     (const std::string& _path);
 		bool        removeFile         (const std::string& _path);
